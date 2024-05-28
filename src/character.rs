@@ -5,16 +5,16 @@ trait Health {
     fn heal(&mut self, heal: i16);
     fn damage(&mut self, damage: i16);
 }
+struct Position {
+    x: i32,
+    y: i32,
+}
 
 struct Character<'obj>{
     health: i16,
     dps: i16,
     sprite: Object<'obj>,
-}
-
-struct Position {
-    x: i32,
-    y: i32,
+    position: Position,
 }
 
 impl Health for Character<'_>{

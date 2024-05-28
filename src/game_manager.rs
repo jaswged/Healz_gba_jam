@@ -4,11 +4,12 @@ use agb::include_aseprite;
 pub static GRAPHICS: &Graphics = include_aseprite!(
     "gfx/corners.aseprite",  // Frame around characters
     "gfx/buttons.aseprite",  // Buttons on Gba ui
-    "gfx/boss_hp.aseprite" // 16x16 test
+    "gfx/boss_hp.aseprite", // boss health bar size 16x16
+    "gfx/bars.aseprite" // character health bars size 8x8
+    ,"gfx/dungeon.aseprite" // background tiles
+    ,"gfx/characters_64.aseprite" // Character sprites
 );
 
-// Too large to load
-// "gfx/health.aseprite"   // Health ui bars 128 x32
-// "gfx/wiz.aseprite"       // Wizard character 48x48
-// "gfx/bars.aseprite"     // Hp and mana bars for player  12 x 8
-// "gfx/boss_hp.aseprite"   // Hp bar for boss  20 x 16
+pub struct GameManager{
+    pub currently_selected_char: i32
+}
