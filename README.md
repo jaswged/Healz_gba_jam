@@ -1,11 +1,89 @@
-# AGBRS template
+# Healz
 
-## A basic template example for agb projects
+Quest through a dungeon playing as the healer in a party of 4 in this GBA game.
+Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 
-This makes getting started with a new project for the Game Boy Advance in rust really simple, by providing
-all the boiler plate files for you.
+## ToDo
 
-## Building
+- [ ] Create characters with health and dps logic
+- [ ] Create sprites for characters
+- [ ] Create a single heal spell to test health system
+- [ ] Create a boss to attack characters
+- [ ] Have chars dps back with
+  - [ ] Animations for unique attacks
+- [ ] ...
+- [ ] ...
+- [ ] ...
+- [ ] ...
+- [ ] ...
+- [ ] everything else
+
+### Sprite ToDos
+
+- [ ] Get 4 party member characters
+- [ ] Big bad boss guy
+- [ ] Health bar. Mana bar, Boss bar with skull. use existing one?
+- [ ] Figure out how to do text. is it all char sprites or some tool
+- [ ] Spell effects
+- [ ] Maybe make boss health bar 12-16 px high so you can fit a skull
+- [ ] ...
+- [ ] ...
+- [ ] ...
+- [ ] ...
+
+### Nice To Haves
+
+- [ ] Intro battle for warming up to the real deal, like a tutorial?
+- [ ] Keep track of total healing and over-healing so at the end you can share those stats.
+- [ ] Rogue-like dungeons with more packs and bosses
+- [ ] Perhaps a story for the whole dungeon
+- [ ] StS style overworld going node to node
+- [ ] Gear found on boss to make later fights easier
+- [ ] Xp for level ups
+- [ ] ...
+
+## Gameplay
+
+`todo!();`
+
+Each character has a set dps and health.
+
+E.G.
+
+| Character | Health  | DPS       |
+|-----------|---------|-----------|
+| Tank-Man  | 20      | 2         |
+| Whizard   | 12      | 4         |
+| Rangeer   | 16      | 3         |
+| Boss Boi  | 100     | 5dps/3dps |
+
+### Controls
+
+- A: 1 sec cast basic heal `Bandage`
+- B: Instant cast heal with a cooldown `Cauterize`
+- L: Hot heals over 5 seconds. Only 1 at a time `Regenerate`
+- R: Hold to generate `Meditate`
+- D-pad: Move cursor around to select which character to cast spell on.
+- Start: Start over?
+- Select: Menu shows details for above spells
+
+## UI Layout
+
+GBA is 240x160 pixels.
+So with 16px tiles you get 15 x 10 tiles
+
+## Story
+
+Game begins with dialog,
+> One last pack and we're at the boss. Is everyone ready?
+
+A DBM type ready check sounds and player presses `A` to begin the pull.
+
+This first combat is a tutorial of sorts. (Skip for POC. just boss)
+
+Final boss is a big dragon/cat that has 2 phases and 2 attacks. Single target on tank and a cleave for everyone.
+
+## Building AGB
 
 ### Prerequisites
 
@@ -48,12 +126,6 @@ or in release mode
 ```sh
 cargo run --release
 ```
-
-## Starting development
-
-You can find the documentation for agb [here](https://docs.rs/agb/latest/agb/).
-
-You may also want to change the package name and version in `Cargo.toml` before you start.
 
 ## Shipping a .gba file for real hardware
 
