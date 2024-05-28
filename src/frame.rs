@@ -43,35 +43,34 @@ impl<'obj> Frame<'obj> {
     }
 
     pub fn set_position(&mut self, left_right: i32, up_down: i32){
+        // todo rename or share logic with selected char
         self.left = (self.left + left_right).clamp(0, 1);
         self.up = (self.up + up_down).clamp(0, 1);
-        println!("INside set position");
-        println!("L-R: {}, U-D: {}", left_right, up_down);
-        println!("Left: {}, up: {}", self.left, self.up);
         self.update_position();
     }
 
     fn update_position(&mut self) {
+        // left|up
         if self.left == 0 && self.up == 0 { // 00
             self.top_left.set_position((0, 0));
             self.top_right.set_position((64, 0));
             self.bot_left.set_position((0, 56));
             self.bot_right.set_position((64, 56));
         } else if self.left == 0 && self.up == 1 { // 01
-            self.top_left.set_position((64, 0));
-            self.top_right.set_position((128, 0));
-            self.bot_left.set_position((64, 56));
-            self.bot_right.set_position((128, 56));
-        } else if self.left == 1 && self.up == 0 { // 10
             self.top_left.set_position((0, 56));
             self.top_right.set_position((64, 56));
             self.bot_left.set_position((0, 112));
             self.bot_right.set_position((64, 112));
+        } else if self.left == 1 && self.up == 0 { // 10
+            self.top_left.set_position((64, 0));
+            self.top_right.set_position((128, 0));
+            self.bot_left.set_position((64, 56));
+            self.bot_right.set_position((128, 56));
         } else { // 11
-            self.top_left.set_position((0, 0));
-            self.top_right.set_position((64, 0));
-            self.bot_left.set_position((0, 56));
-            self.bot_right.set_position((64, 56));
+            self.top_left.set_position((64, 56));
+            self.top_right.set_position((128, 56));
+            self.bot_left.set_position((64, 112));
+            self.bot_right.set_position((128, 112));
         }
     }
 }
