@@ -56,21 +56,21 @@ impl<'obj> Frame<'obj> {
             self.top_right.set_position((64, 0));
             self.bot_left.set_position((0, 56));
             self.bot_right.set_position((64, 56));
-        } else if self.left == 0 && self.up == 1 { // 01
-            self.top_left.set_position((0, 56));
-            self.top_right.set_position((64, 56));
+        } else if self.left == 0 && self.up == 1 { // 01 Bot Left
+            self.top_left.set_position((0, 64));
+            self.top_right.set_position((64, 64));
             self.bot_left.set_position((0, 112));
             self.bot_right.set_position((64, 112));
-        } else if self.left == 1 && self.up == 0 { // 10
-            self.top_left.set_position((64, 0));
-            self.top_right.set_position((128, 0));
-            self.bot_left.set_position((64, 56));
-            self.bot_right.set_position((128, 56));
+        } else if self.left == 1 && self.up == 0 { // 10 Top Right
+            self.top_left.set_position((72, 0));
+            self.top_right.set_position((136, 0));
+            self.bot_left.set_position((72, 56));
+            self.bot_right.set_position((136, 56));
         } else { // 11
-            self.top_left.set_position((64, 56));
-            self.top_right.set_position((128, 56));
-            self.bot_left.set_position((64, 112));
-            self.bot_right.set_position((128, 112));
+            self.top_left.set_position((72, 64));
+            self.top_right.set_position((136, 64));
+            self.bot_left.set_position((72, 112));
+            self.bot_right.set_position((136, 112));
         }
     }
 }

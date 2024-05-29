@@ -72,6 +72,10 @@ E.G.
 GBA is 240x160 pixels.
 So with 16px tiles you get 15 x 10 tiles
 
+Frame around selected character
+Γ    ˥
+L    ˩
+
 ## Story
 
 Game begins with dialog,

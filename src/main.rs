@@ -18,6 +18,7 @@ mod frame;
 mod game_manager;
 mod character;
 mod health_bar;
+mod boss_health_bar;
 
 use frame::Frame;
 use crate::game_manager::{GameManager, GRAPHICS};
@@ -28,17 +29,25 @@ use agb::{
     println,
     input::Button
 };
+use agb::display::object::{OamManaged, Sprite};
+use agb::input::ButtonController;
+use crate::boss_health_bar::BossHealthBar;
 use crate::health_bar::HealthBar;
 
 // We define some easy ways of referencing the sprites
 // static MAIN_SPRITE: &Tag = GRAPHICS.tags().get("main"); // TODO menu
-// TODO start/select?
+// TODO These are tags, not sprites
 static BTN_A_SPRITE: &Tag = GRAPHICS.tags().get("A");
 static BTN_B_SPRITE: &Tag = GRAPHICS.tags().get("B");
 static BTN_L_SPRITE: &Tag = GRAPHICS.tags().get("L");
 static BTN_R_SPRITE: &Tag = GRAPHICS.tags().get("R");
-static SKULL_SPRITE: &Tag = GRAPHICS.tags().get("skull");
-static CHAR_SPRITE: &Tag = GRAPHICS.tags().get("tankey");
+static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
+// static CHAR_SPRITE: &Tag = GRAPHICS.tags().get("tankey");
+static BARB_SPRITE_TAG: &Tag = GRAPHICS.tags().get("barb");
+static TANKEY_SPRITE_TAG: &Tag = GRAPHICS.tags().get("tankey");
+static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
+
+static SPRITES: &[Sprite] = GRAPHICS.sprites();
 
 // The main function must take 1 arguments and never return. The agb::entry decorator
 // ensures that everything is in order. `agb` will call this after setting up the stack
@@ -46,21 +55,27 @@ static CHAR_SPRITE: &Tag = GRAPHICS.tags().get("tankey");
 #[agb::entry]
 fn main(mut gba: agb::Gba) -> ! {
     // Get the object manager
-    let object = gba.display.object.get_managed();
+    let object: OamManaged = gba.display.object.get_managed();
     let game_manager = GameManager{
         currently_selected_char: 0
     };
 
     // Create a button controller. only allows for reading
-    let mut input = agb::input::ButtonController::new();
+    let mut input = ButtonController::new();
 
     // TODO main menu and A to continue.
+    // show_splash_screen(&mut input, &object);
 
     // Background
     // let background: &'a mut BackgroundRegular<'b>;
 
     // Create an object with the button sprite
-    let mut skull_ball = object.object_sprite(SKULL_SPRITE.sprite(0));
+    // let mut skull_ball = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
+    let mut skull_ball = object.object_sprite(&SPRITES[0]);
+
+    let skull_sprite_zero: &Sprite = SKULL_SPRITE_TAG.sprite(0);
+    let btna_sprite_zero: &Sprite = BTN_A_SPRITE.sprite(0);
+
     let mut but_a = object.object_sprite(BTN_A_SPRITE.sprite(0));
     let mut but_b = object.object_sprite(BTN_B_SPRITE.sprite(0));
     let mut but_l = object.object_sprite(BTN_L_SPRITE.sprite(0));
@@ -68,21 +83,31 @@ fn main(mut gba: agb::Gba) -> ! {
 
     // Players
     // Skulls pretend their players? or dead ones at least. lol
-    let mut char0 = object.object_sprite(SKULL_SPRITE.sprite(0));
+    let mut char0 = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
     char0.set_x(32).set_y(28).show();
-    let mut char1 = object.object_sprite(SKULL_SPRITE.sprite(0));
+    let mut char1 = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
     char1.set_x(32).set_y(84).show();
-    let mut char2 = object.object_sprite(CHAR_SPRITE.sprite(0));
-    char2.set_x(64).set_y(8).show();
-    let mut char3 = object.object_sprite(SKULL_SPRITE.sprite(0));
+    let mut char2 = object.object_sprite(TANKEY_SPRITE_TAG.sprite(0));
+    char2.set_x(96).set_y(28).show();
+    let mut char3 = object.object_sprite(BARB_SPRITE_TAG.sprite(0));
     char3.set_x(96).set_y(84).show();
+
+    // Player health bar todo put into a struct together with above?
+    let mut hp0 = HealthBar::new(&object, 16, 16);
+    let mut hp1 = HealthBar::new(&object, 16, 80);
+    let mut hp2 = HealthBar::new(&object, 88, 16);
+    let mut hp3 = HealthBar::new(&object, 88, 80);
 
     // Frame
     let mut frame = Frame::new(&object, 0, 0);
 
+    // Boss
+    let mut boss = object.object_sprite(BOSS_SPRITE.sprite(0));
+    boss.set_x(152).set_y(32).show();
     // Boss Health Bar
     // Todo: put this as an attribute on a char/boss entity with Health and such
-    let mut bhp = HealthBar::new(&object, 144, 16);
+    let mut bhp = BossHealthBar::new(&object, 152, 16);
+
 
     // Bottom bar
     skull_ball.set_x(170).set_y(125).show();
@@ -95,9 +120,13 @@ fn main(mut gba: agb::Gba) -> ! {
 
     let mut left_right = 0;
     let mut up_down = 0;
+    let mut timer = 0; // what is this for
+
+    let mut skull_hidden: bool = false;
 
     // Begin game loop here
     loop {
+        timer += 1;
         // DPAD update frame. i.e. Selected character
         // x_tri and y_tri describe with -1, 0 and 1 which way the d-pad is being pressed
         left_right = input.just_pressed_x_tri() as i32;
@@ -108,6 +137,7 @@ fn main(mut gba: agb::Gba) -> ! {
         }
 
         // TOdo put the spells into a if-elseif block so only 1 can be hit at a time
+        // Maybe have a "Cooldown indicator" like a In center of 4 spells
         if input.is_pressed(Button::A){
             // todo add a cast time meter? .5 secs
             println!("Input A pressed");
@@ -116,8 +146,14 @@ fn main(mut gba: agb::Gba) -> ! {
             // the B button is pressed
             println!("Input B pressed");
             println!("Cast Cauterize!");
-            skull_ball.hide();
-            // test hide sprite when button is pushed
+            if skull_hidden {
+                // skull_ball.set_sprite(btna_sprite_zero);
+                skull_ball.show();
+            } else {
+                // skull_ball.set_sprite(skull_sprite_zero);
+                skull_ball.hide();
+            }
+            skull_hidden = !skull_hidden;
             // todo begin ability cooldown.
         }else if input.is_just_pressed(Button::L) {
             // the B button is pressed
@@ -139,4 +175,35 @@ fn main(mut gba: agb::Gba) -> ! {
         // on the actual button press state.
         input.update();
     }
+}
+
+fn show_splash_screen(input: &mut ButtonController, object: &OamManaged) {
+    // todo show splash screen sprites. Tilemap etc
+    let mut splash_sprite = object.object_sprite(BOSS_SPRITE.sprite(0));
+    splash_sprite.set_x(75).set_y(100).show();
+
+    let mut char0 = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
+    char0.set_x(132).set_y(112).show();
+    object.commit();
+
+    // Todo tiled background
+    // let mut tiled = agb.display.video.tiled0();
+    // tiled.set_background_tilemap(0, splash_screens::splash.tiles);
+    // tiled.set_background_palettes(splash_screens::splash.palettes);
+    // let mut splash_screen_display = tiled.get_regular().unwrap();
+
+    loop {
+        input.update();
+        if input.is_just_pressed(
+            Button::A
+                | Button::B
+                | Button::START
+                | Button::SELECT,
+        ) {
+            break;
+        }
+        agb::display::busy_wait_for_vblank();
+    }
+    splash_sprite.hide();
+    // splash_screen_display.hide();
 }
