@@ -19,17 +19,20 @@ mod game_manager;
 mod character;
 mod health_bar;
 mod boss_health_bar;
+mod sfx;
 
 use frame::Frame;
 use crate::game_manager::{GameManager, GRAPHICS};
 
-use agb::{
-    display::object::{Graphics, Tag},
-    include_aseprite,
-    println,
-    input::Button
-};
+use agb::{display::object::{Graphics, Tag}, include_aseprite, println, input::Button, include_background_gfx};
 use agb::display::object::{OamManaged, Sprite};
+use agb::{
+    display::{
+        tiled::{RegularBackgroundSize, TileFormat, TileSet, TileSetting, Tiled0, TiledMap, VRamManager},
+        Priority,
+    }
+};
+use agb::display::tiled::RegularMap;
 use agb::input::ButtonController;
 use crate::boss_health_bar::BossHealthBar;
 use crate::health_bar::HealthBar;
@@ -45,7 +48,11 @@ static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
 // static CHAR_SPRITE: &Tag = GRAPHICS.tags().get("tankey");
 static BARB_SPRITE_TAG: &Tag = GRAPHICS.tags().get("barb");
 static TANKEY_SPRITE_TAG: &Tag = GRAPHICS.tags().get("tankey");
+static WIZARD_SPRITE_TAG: &Tag = GRAPHICS.tags().get("wizard");
+static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer");
 static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
+static BANNER_L_SPRITE: &Tag = GRAPHICS.tags().get("banner_l");
+static BANNER_M_SPRITE: &Tag = GRAPHICS.tags().get("banner_mid");
 
 static SPRITES: &[Sprite] = GRAPHICS.sprites();
 
@@ -64,7 +71,61 @@ fn main(mut gba: agb::Gba) -> ! {
     let mut input = ButtonController::new();
 
     // TODO main menu and A to continue.
-    // show_splash_screen(&mut input, &object);
+    include_background_gfx!(backgrounds, "000000",
+        level => deduplicate "gfx/dungeon_floor.png",
+        title => deduplicate "gfx/title-screen.aseprite",);
+        // dungeon => deduplicate "gfx/dungeon.aseprite");
+    // let tileset = &backgrounds::level.tiles;
+    // // let (_background, mut vram) = gba.display.video.tiled0();
+    // // let (gfx: Tiled0, mut vram: VRamManager) = gba.display.video.tiled0();
+    // let (tiled, mut vram) = gba.display.video.tiled0();
+    //
+    // // let gfx = gba.display.object.get_managed();
+    //
+    // vram.set_background_palettes(backgrounds::PALETTES);
+    //
+    // let mut bg = tiled.background(Priority::P0,
+    //                               RegularBackgroundSize::Background32x32,
+    //                               tileset.format());
+    // for y in 0..16u16 {
+    //     for x in 0..30u16 {
+    //         bg.set_tile(
+    //             &mut vram,
+    //             (x, y),
+    //             tileset,
+    //             backgrounds::level.tile_settings[0 as usize],
+    //         );
+    //     }
+    // }
+    // bg.commit(&mut vram);
+    // bg.set_visible(true);
+
+    // Show title page. press to continue
+    let (tiled, mut vram) = gba.display.video.tiled0();
+    let mut background = tiled.background(
+        Priority::P1,
+        RegularBackgroundSize::Background32x32,
+        TileFormat::FourBpp,
+    );
+
+    background.set_scroll_pos((0i16, 0));
+    vram.set_background_palettes(backgrounds::PALETTES);
+
+    background.set_visible(false);
+
+    background.fill_with(&mut vram, &backgrounds::title);
+    background.commit(&mut vram);
+    // sfx.frame(); = // self.mixer.frame();
+
+    background.set_visible(true);
+
+    show_splash_screen(&mut input, &object);
+
+    // -- normal code ehre --
+
+    background.set_visible(false);
+    background.clear(&mut vram);
+    background.commit(&mut vram);
 
     // Background
     // let background: &'a mut BackgroundRegular<'b>;
@@ -76,21 +137,16 @@ fn main(mut gba: agb::Gba) -> ! {
     let skull_sprite_zero: &Sprite = SKULL_SPRITE_TAG.sprite(0);
     let btna_sprite_zero: &Sprite = BTN_A_SPRITE.sprite(0);
 
-    let mut but_a = object.object_sprite(BTN_A_SPRITE.sprite(0));
-    let mut but_b = object.object_sprite(BTN_B_SPRITE.sprite(0));
-    let mut but_l = object.object_sprite(BTN_L_SPRITE.sprite(0));
-    let mut but_r = object.object_sprite(BTN_R_SPRITE.sprite(0));
-
-    // Players
-    // Skulls pretend their players? or dead ones at least. lol
-    let mut char0 = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
+    // Players todo structs
+    // Keep skull sprite for when dead? or tombstone or just laying flat sprite
+    let mut char0 = object.object_sprite(HEALER_SPRITE_TAG.sprite(0));
     char0.set_x(32).set_y(28).show();
-    let mut char1 = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
-    char1.set_x(32).set_y(84).show();
+    let mut char1 = object.object_sprite(WIZARD_SPRITE_TAG.sprite(0));
+    char1.set_x(32).set_y(92).show();
     let mut char2 = object.object_sprite(TANKEY_SPRITE_TAG.sprite(0));
     char2.set_x(96).set_y(28).show();
     let mut char3 = object.object_sprite(BARB_SPRITE_TAG.sprite(0));
-    char3.set_x(96).set_y(84).show();
+    char3.set_x(96).set_y(92).show();
 
     // Player health bar todo put into a struct together with above?
     let mut hp0 = HealthBar::new(&object, 16, 16);
@@ -108,14 +164,39 @@ fn main(mut gba: agb::Gba) -> ! {
     // Todo: put this as an attribute on a char/boss entity with Health and such
     let mut bhp = BossHealthBar::new(&object, 152, 16);
 
-
     // Bottom bar
+
+    // BANNER_L_SPRITE // todo create method or something
+    let mut ban_l = object.object_sprite(BANNER_L_SPRITE.sprite(0));
+    ban_l.set_x(0).set_y(128).show();
+    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
+    ban_mid.set_x(32).set_y(128).set_hflip(true).show();
+    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
+    ban_mid.set_x(64).set_y(128).show();
+    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
+    ban_mid.set_x(96).set_y(128).set_hflip(true).show();
+    // going to need a short mid, or overlap
+    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
+    ban_mid.set_x(112).set_y(128).set_hflip(true).show();
+    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
+    ban_mid.set_x(144).set_y(128).show();
+    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
+    ban_mid.set_x(176).set_y(128).set_hflip(true).show();
+    let mut ban_r = object.object_sprite(BANNER_L_SPRITE.sprite(0));
+    ban_r.set_x(208).set_y(128).set_hflip(true).show();
+
+    // buttons
+    let mut but_a = object.object_sprite(BTN_A_SPRITE.sprite(0));
+    let mut but_b = object.object_sprite(BTN_B_SPRITE.sprite(0));
+    let mut but_l = object.object_sprite(BTN_L_SPRITE.sprite(0));
+    let mut but_r = object.object_sprite(BTN_R_SPRITE.sprite(0));
+
     skull_ball.set_x(170).set_y(125).show();
     let bot_bar = agb::display::HEIGHT as u16;
-    let right_side = agb::display::WIDTH as u16 - 16;
-    but_a.set_x(0).set_y(bot_bar-16).show();
-    but_b.set_x(right_side).set_y(bot_bar-16).show();
-    but_l.set_x(0).set_y(bot_bar-32).show();
+    let right_side = agb::display::WIDTH as u16 - 22; // 16 - 6
+    but_b.set_x(6).set_y(bot_bar-16).show();
+    but_a.set_x(right_side).set_y(bot_bar-16).show();
+    but_l.set_x(6).set_y(bot_bar-32).show();
     but_r.set_x(right_side).set_y(bot_bar-32).show();
 
     let mut left_right = 0;
@@ -179,14 +260,17 @@ fn main(mut gba: agb::Gba) -> ! {
 
 fn show_splash_screen(input: &mut ButtonController, object: &OamManaged) {
     // todo show splash screen sprites. Tilemap etc
-    let mut splash_sprite = object.object_sprite(BOSS_SPRITE.sprite(0));
-    splash_sprite.set_x(75).set_y(100).show();
-
-    let mut char0 = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
-    char0.set_x(132).set_y(112).show();
-    object.commit();
+    // let mut splash_sprite = object.object_sprite(BOSS_SPRITE.sprite(0));
+    // splash_sprite.set_x(75).set_y(64).set_hflip(true).show();
+    //
+    // let mut char0 = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
+    // char0.set_x(132).set_y(64).show();
+    // object.commit();
 
     // Todo tiled background
+    // agb::include_background_gfx!(water_tiles, tiles => "examples/water_tiles.png");
+
+
     // let mut tiled = agb.display.video.tiled0();
     // tiled.set_background_tilemap(0, splash_screens::splash.tiles);
     // tiled.set_background_palettes(splash_screens::splash.palettes);
@@ -204,6 +288,6 @@ fn show_splash_screen(input: &mut ButtonController, object: &OamManaged) {
         }
         agb::display::busy_wait_for_vblank();
     }
-    splash_sprite.hide();
+    // splash_sprite.hide();
     // splash_screen_display.hide();
 }

@@ -40,6 +40,7 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 - [ ] StS style overworld going node to node
 - [ ] Gear found on boss to make later fights easier
 - [ ] Xp for level ups
+- [ ] Save game logic
 - [ ] ...
 
 ## Gameplay
