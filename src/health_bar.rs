@@ -1,7 +1,7 @@
 // change our imports to include what we will use
-use agb::{
-    display::object::{Graphics, Object, OamManaged, Tag}
-};
+use agb::{display::object::{Graphics, Object, OamManaged, Tag}, include_background_gfx};
+use agb::display::Priority;
+use agb::display::tiled::{RegularBackgroundSize, Tiled0, VRamManager};
 
 use crate::game_manager::GRAPHICS;
 
@@ -80,4 +80,29 @@ impl<'obj> HealthBar<'obj> {
         // End goes at a fixed distance from start
         self.health_end.set_position((x+40, y)); // 80
     }
+
+    // fn fill_health( vram: &mut VRamManager, tiled: &Tiled0){
+    //     include_background_gfx!(backgrounds, "000000",
+    //     level => deduplicate "gfx/dungeon_floor.png",
+    //     dungeon => deduplicate "gfx/dungeon.aseprite");
+    //
+    //     let tileset = &backgrounds::level.tiles;
+    //     vram.set_background_palettes(backgrounds::PALETTES);
+    //
+    //     let mut bg = tiled.background(Priority::P0,
+    //                                   RegularBackgroundSize::Background32x32,
+    //                                   tileset.format());
+    //     for y in 0..16u16 {
+    //         for x in 0..30u16 {
+    //             bg.set_tile(
+    //                 vram,
+    //                 (x, y),
+    //                 tileset,
+    //                 backgrounds::level.tile_settings[0 as usize],
+    //             );
+    //         }
+    //     }
+    //     bg.commit(vram);
+    //     bg.set_visible(true);
+    // }
 }

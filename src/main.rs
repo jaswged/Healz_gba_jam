@@ -14,12 +14,15 @@
 #![cfg_attr(test, reexport_test_harness_main = "test_main")]
 #![cfg_attr(test, test_runner(agb::test_runner::test_runner))]
 
+extern crate alloc;
+
 mod frame;
 mod game_manager;
 mod character;
 mod health_bar;
 mod boss_health_bar;
 mod sfx;
+mod background;
 
 use frame::Frame;
 use crate::game_manager::{GameManager, GRAPHICS};
@@ -32,25 +35,33 @@ use agb::{
         Priority,
     }
 };
-use agb::display::tiled::RegularMap;
+use agb::display::tiled::{MapLoan, RegularMap};
 use agb::input::ButtonController;
+use crate::background::{show_dungeon_background, show_splash_screen};
 use crate::boss_health_bar::BossHealthBar;
 use crate::health_bar::HealthBar;
 
 // We define some easy ways of referencing the sprites
 // static MAIN_SPRITE: &Tag = GRAPHICS.tags().get("main"); // TODO menu
+
 // TODO These are tags, not sprites
+// region Todo group buttons into own file
 static BTN_A_SPRITE: &Tag = GRAPHICS.tags().get("A");
 static BTN_B_SPRITE: &Tag = GRAPHICS.tags().get("B");
 static BTN_L_SPRITE: &Tag = GRAPHICS.tags().get("L");
 static BTN_R_SPRITE: &Tag = GRAPHICS.tags().get("R");
+// endregion
+
+// region todo group characters into their file
 static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
-// static CHAR_SPRITE: &Tag = GRAPHICS.tags().get("tankey");
 static BARB_SPRITE_TAG: &Tag = GRAPHICS.tags().get("barb");
 static TANKEY_SPRITE_TAG: &Tag = GRAPHICS.tags().get("tankey");
 static WIZARD_SPRITE_TAG: &Tag = GRAPHICS.tags().get("wizard");
 static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer");
 static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
+// endregion
+
+// UI sprites
 static BANNER_L_SPRITE: &Tag = GRAPHICS.tags().get("banner_l");
 static BANNER_M_SPRITE: &Tag = GRAPHICS.tags().get("banner_mid");
 
@@ -70,69 +81,22 @@ fn main(mut gba: agb::Gba) -> ! {
     // Create a button controller. only allows for reading
     let mut input = ButtonController::new();
 
-    // TODO main menu and A to continue.
-    include_background_gfx!(backgrounds, "000000",
-        level => deduplicate "gfx/dungeon_floor.png",
-        title => deduplicate "gfx/title-screen.aseprite",);
-        // dungeon => deduplicate "gfx/dungeon.aseprite");
-    // let tileset = &backgrounds::level.tiles;
-    // // let (_background, mut vram) = gba.display.video.tiled0();
-    // // let (gfx: Tiled0, mut vram: VRamManager) = gba.display.video.tiled0();
-    // let (tiled, mut vram) = gba.display.video.tiled0();
-    //
-    // // let gfx = gba.display.object.get_managed();
-    //
-    // vram.set_background_palettes(backgrounds::PALETTES);
-    //
-    // let mut bg = tiled.background(Priority::P0,
-    //                               RegularBackgroundSize::Background32x32,
-    //                               tileset.format());
-    // for y in 0..16u16 {
-    //     for x in 0..30u16 {
-    //         bg.set_tile(
-    //             &mut vram,
-    //             (x, y),
-    //             tileset,
-    //             backgrounds::level.tile_settings[0 as usize],
-    //         );
-    //     }
-    // }
-    // bg.commit(&mut vram);
-    // bg.set_visible(true);
-
     // Show title page. press to continue
     let (tiled, mut vram) = gba.display.video.tiled0();
-    let mut background = tiled.background(
-        Priority::P1,
-        RegularBackgroundSize::Background32x32,
-        TileFormat::FourBpp,
-    );
-
-    background.set_scroll_pos((0i16, 0));
-    vram.set_background_palettes(backgrounds::PALETTES);
-
-    background.set_visible(false);
-
-    background.fill_with(&mut vram, &backgrounds::title);
-    background.commit(&mut vram);
-    // sfx.frame(); = // self.mixer.frame();
-
-    background.set_visible(true);
-
-    show_splash_screen(&mut input, &object);
-
-    // -- normal code ehre --
-
-    background.set_visible(false);
-    background.clear(&mut vram);
-    background.commit(&mut vram);
+    show_splash_screen(&mut input, &mut vram, &tiled);
 
     // Background
     // let background: &'a mut BackgroundRegular<'b>;
+    show_dungeon_background(&mut vram, &tiled);
 
-    // Create an object with the button sprite
-    // let mut skull_ball = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
-    let mut skull_ball = object.object_sprite(&SPRITES[0]);
+    // todo Show bottom banner and initial "story" text
+
+    include_background_gfx!(backgrounds, "000000",
+        level => deduplicate "gfx/dungeon_floor.png",
+        );
+
+    let mut spell_effect = object.object_sprite(&SPRITES[0]);
+    spell_effect.hide();
 
     let skull_sprite_zero: &Sprite = SKULL_SPRITE_TAG.sprite(0);
     let btna_sprite_zero: &Sprite = BTN_A_SPRITE.sprite(0);
@@ -191,7 +155,7 @@ fn main(mut gba: agb::Gba) -> ! {
     let mut but_l = object.object_sprite(BTN_L_SPRITE.sprite(0));
     let mut but_r = object.object_sprite(BTN_R_SPRITE.sprite(0));
 
-    skull_ball.set_x(170).set_y(125).show();
+    spell_effect.set_x(170).set_y(100).show();
     let bot_bar = agb::display::HEIGHT as u16;
     let right_side = agb::display::WIDTH as u16 - 22; // 16 - 6
     but_b.set_x(6).set_y(bot_bar-16).show();
@@ -219,6 +183,7 @@ fn main(mut gba: agb::Gba) -> ! {
 
         // TOdo put the spells into a if-elseif block so only 1 can be hit at a time
         // Maybe have a "Cooldown indicator" like a In center of 4 spells
+        // todo create a player "class" to keep track of all user functions
         if input.is_pressed(Button::A){
             // todo add a cast time meter? .5 secs
             println!("Input A pressed");
@@ -227,12 +192,14 @@ fn main(mut gba: agb::Gba) -> ! {
             // the B button is pressed
             println!("Input B pressed");
             println!("Cast Cauterize!");
+            spell_effect.show();
+            // start timer for how long spell lasts or cooldown
             if skull_hidden {
-                // skull_ball.set_sprite(btna_sprite_zero);
-                skull_ball.show();
+                spell_effect.set_sprite(object.sprite(btna_sprite_zero));
+                // spell_effect.show();
             } else {
-                // skull_ball.set_sprite(skull_sprite_zero);
-                skull_ball.hide();
+                spell_effect.set_sprite(object.sprite(skull_sprite_zero));
+                // spell_effect.hide();
             }
             skull_hidden = !skull_hidden;
             // todo begin ability cooldown.
@@ -256,38 +223,4 @@ fn main(mut gba: agb::Gba) -> ! {
         // on the actual button press state.
         input.update();
     }
-}
-
-fn show_splash_screen(input: &mut ButtonController, object: &OamManaged) {
-    // todo show splash screen sprites. Tilemap etc
-    // let mut splash_sprite = object.object_sprite(BOSS_SPRITE.sprite(0));
-    // splash_sprite.set_x(75).set_y(64).set_hflip(true).show();
-    //
-    // let mut char0 = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
-    // char0.set_x(132).set_y(64).show();
-    // object.commit();
-
-    // Todo tiled background
-    // agb::include_background_gfx!(water_tiles, tiles => "examples/water_tiles.png");
-
-
-    // let mut tiled = agb.display.video.tiled0();
-    // tiled.set_background_tilemap(0, splash_screens::splash.tiles);
-    // tiled.set_background_palettes(splash_screens::splash.palettes);
-    // let mut splash_screen_display = tiled.get_regular().unwrap();
-
-    loop {
-        input.update();
-        if input.is_just_pressed(
-            Button::A
-                | Button::B
-                | Button::START
-                | Button::SELECT,
-        ) {
-            break;
-        }
-        agb::display::busy_wait_for_vblank();
-    }
-    // splash_sprite.hide();
-    // splash_screen_display.hide();
 }
