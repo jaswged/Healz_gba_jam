@@ -9,7 +9,7 @@ include_background_gfx!(backgrounds, "000000",
         dungeon => deduplicate "gfx/dungeon.aseprite");
 
 pub fn show_dungeon_background(vram: &mut VRamManager, tiled: &Tiled0) {
-    let mut bg = tiled.background(Priority::P0,
+    let mut bg = tiled.background(Priority::P1,
                                   RegularBackgroundSize::Background32x32,
                                   TileFormat::FourBpp);
     bg.set_scroll_pos((0i16, 0));

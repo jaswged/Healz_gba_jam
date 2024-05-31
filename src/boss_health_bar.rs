@@ -128,12 +128,15 @@ impl<'obj> BossHealthBar<'obj> {
 
     fn update_bar(&mut self, damage: usize) {
         // currently decrement only!
-        println!("Update health ptr at {}", self.heath_ptr);
-        for i in (self.heath_ptr..self.heath_ptr-damage/2).rev(){
+        println!("\nUpdate health bar. Ptr at {}", self.heath_ptr);
+        let new_ptr = self.heath_ptr-damage/2;
+        println!("ptr: {}, new_ptr {}", self.heath_ptr, new_ptr);
+        for i in new_ptr..self.heath_ptr {
+            println!("I is: {}", i);
             let tmp: &mut HealthBarSegment = self.middle_healths.get_mut(i).expect("Should have segment at pointer!");
             tmp.health_bar.set_sprite(self.object.sprite(MID_MT_SPRITE));
         }
-        self.heath_ptr = self.heath_ptr-damage;
+        self.heath_ptr = new_ptr;
         println!("New ptr at {}", self.heath_ptr);
     }
 }

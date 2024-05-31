@@ -23,6 +23,7 @@ mod health_bar;
 mod boss_health_bar;
 mod sfx;
 mod background;
+mod bar;
 
 use frame::Frame;
 use crate::game_manager::{GameManager, GRAPHICS};
@@ -40,6 +41,7 @@ use agb::input::ButtonController;
 use crate::background::{show_dungeon_background, show_splash_screen};
 use crate::boss_health_bar::BossHealthBar;
 use crate::health_bar::HealthBar;
+use crate::bar::{Bar, BarType};
 
 // We define some easy ways of referencing the sprites
 // static MAIN_SPRITE: &Tag = GRAPHICS.tags().get("main"); // TODO menu
@@ -72,6 +74,10 @@ static SPRITES: &[Sprite] = GRAPHICS.sprites();
 // and interrupt handlers correctly. It will also handle creating the `Gba` struct for you.
 #[agb::entry]
 fn main(mut gba: agb::Gba) -> ! {
+    game_main(gba) // Use separate fn since agb::entry macro breaks rust analyzer
+}
+
+fn game_main(mut gba: agb::Gba) -> ! {
     // Get the object manager
     let object: OamManaged = gba.display.object.get_managed();
     let game_manager = GameManager{
@@ -114,6 +120,7 @@ fn main(mut gba: agb::Gba) -> ! {
 
     // Player health bar todo put into a struct together with above?
     // todo having more than one hp bar hides all the character sprites?
+    println!("Create first health bar");
     let mut hp0 = HealthBar::new(&object, 16, 16);
     // let mut hp1 = HealthBar::new(&object, 16, 80);
     // let mut hp2 = HealthBar::new(&object, 88, 16);
@@ -128,6 +135,7 @@ fn main(mut gba: agb::Gba) -> ! {
     // Boss Health Bar
     // Todo: put this as an attribute on a char/boss entity with Health and such
     let mut bhp = BossHealthBar::new(&object, 152, 16);
+    let mut boss_bar =Bar::new(&object, BarType::Boss_health, 152, 16, 50);
 
     // Bottom bar
 
@@ -185,14 +193,12 @@ fn main(mut gba: agb::Gba) -> ! {
         // TOdo put the spells into a if-elseif block so only 1 can be hit at a time
         // Maybe have a "Cooldown indicator" like a In center of 4 spells
         // todo create a player "class" to keep track of all user functions
-        if input.is_pressed(Button::A){
+        if input.is_just_pressed(Button::A){
             // todo add a cast time meter? .5 secs
-            println!("Input A pressed");
-            println!("Cast Bandage!");
+            println!("A pressed. Cast Bandage!");
         } else if input.is_just_pressed(Button::B) {
             // the B button is pressed
-            println!("Input B pressed");
-            println!("Cast Cauterize!");
+            println!("B pressed Cast Cauterize!");
             spell_effect.show();
             // start timer for how long spell lasts or cooldown
             if skull_hidden {
@@ -211,7 +217,7 @@ fn main(mut gba: agb::Gba) -> ! {
 
             bhp.take_damage(6);
             // todo begin ability cooldown and add heal over time to selected char
-        }else if input.is_pressed(Button::R) {
+        }else if input.is_just_pressed(Button::R) { // todo set back to `is_pressed`
             // the B button is pressed. Hold to charge mana
             println!("Trigger R is held");
             println!("Begin meditation!");
