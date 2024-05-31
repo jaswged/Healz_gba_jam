@@ -113,10 +113,11 @@ fn main(mut gba: agb::Gba) -> ! {
     char3.set_x(96).set_y(92).show();
 
     // Player health bar todo put into a struct together with above?
+    // todo having more than one hp bar hides all the character sprites?
     let mut hp0 = HealthBar::new(&object, 16, 16);
-    let mut hp1 = HealthBar::new(&object, 16, 80);
-    let mut hp2 = HealthBar::new(&object, 88, 16);
-    let mut hp3 = HealthBar::new(&object, 88, 80);
+    // let mut hp1 = HealthBar::new(&object, 16, 80);
+    // let mut hp2 = HealthBar::new(&object, 88, 16);
+    // let mut hp3 = HealthBar::new(&object, 88, 80);
 
     // Frame
     let mut frame = Frame::new(&object, 0, 0);
@@ -207,11 +208,14 @@ fn main(mut gba: agb::Gba) -> ! {
             // the B button is pressed
             println!("Input B pressed");
             println!("Cast Regenerate!");
+
+            bhp.take_damage(6);
             // todo begin ability cooldown and add heal over time to selected char
         }else if input.is_pressed(Button::R) {
             // the B button is pressed. Hold to charge mana
             println!("Trigger R is held");
             println!("Begin meditation!");
+            bhp.take_damage(2);
         }
 
         // Wait for vblank, then commit the objects to the screen
