@@ -51,7 +51,9 @@ impl<'obj> BossHealthBar<'obj> {
         let mut middle_healths: Vec<Object> = Vec::new();
 
         for i in 0..50{
-            middle_healths.push(object.object_sprite(HEALTH_MID.sprite(0)));
+            let mut tmp = object.object_sprite(HEALTH_MID.sprite(0));
+            tmp.show();
+            middle_healths.push(tmp);
         }
 
         let mut b_health_bar = Self {
