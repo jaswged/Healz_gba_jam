@@ -9,6 +9,7 @@ pub static GRAPHICS: &Graphics = include_aseprite!(
     ,"gfx/characters.aseprite" // Character sprites
     ,"gfx/bosses.aseprite" // Character sprites
     ,"gfx/banner.aseprite" // Bottom Banner
+    ,"gfx/health.aseprite" // Bottom Banner
 );
 
 pub struct GameManager{

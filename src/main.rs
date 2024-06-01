@@ -29,14 +29,16 @@ use frame::Frame;
 use crate::game_manager::{GameManager, GRAPHICS};
 
 use agb::{display::object::{Graphics, Tag}, include_aseprite, println, input::Button, include_background_gfx};
-use agb::display::object::{OamManaged, Sprite};
+use agb::display::object::{DynamicSprite, OamManaged, PaletteVram, Size, Sprite};
 use agb::{
     display::{
         tiled::{RegularBackgroundSize, TileFormat, TileSet, TileSetting, Tiled0, TiledMap, VRamManager},
         Priority,
     }
 };
+use agb::display::palette16::Palette16;
 use agb::display::tiled::{MapLoan, RegularMap};
+use agb::fixnum::{Num, num, Vector2D};
 use agb::input::ButtonController;
 use crate::background::{show_dungeon_background, show_splash_screen};
 use crate::boss_health_bar::BossHealthBar;
@@ -67,8 +69,6 @@ static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
 static BANNER_L_SPRITE: &Tag = GRAPHICS.tags().get("banner_l");
 static BANNER_M_SPRITE: &Tag = GRAPHICS.tags().get("banner_mid");
 
-static SPRITES: &[Sprite] = GRAPHICS.sprites();
-
 // The main function must take 1 arguments and never return. The agb::entry decorator
 // ensures that everything is in order. `agb` will call this after setting up the stack
 // and interrupt handlers correctly. It will also handle creating the `Gba` struct for you.
@@ -86,9 +86,9 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
     // Create a button controller. only allows for reading
     let mut input = ButtonController::new();
+    let (tiled, mut vram) = gba.display.video.tiled0();
 
     // Show title page. press to continue
-    let (tiled, mut vram) = gba.display.video.tiled0();
     show_splash_screen(&mut input, &mut vram, &tiled);
 
     // Background
@@ -101,8 +101,9 @@ fn game_main(mut gba: agb::Gba) -> ! {
         level => deduplicate "gfx/dungeon_floor.png",
         );
 
-    let mut spell_effect = object.object_sprite(&SPRITES[0]);
-    spell_effect.hide();
+    let mut spell_effect = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
+    spell_effect.set_position((170, 100));
+    // spell_effect.hide();
 
     let skull_sprite_zero: &Sprite = SKULL_SPRITE_TAG.sprite(0);
     let btna_sprite_zero: &Sprite = BTN_A_SPRITE.sprite(0);
@@ -121,7 +122,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
     // Player health bar todo put into a struct together with above?
     // todo having more than one hp bar hides all the character sprites?
     println!("Create first health bar");
-    let mut hp0 = HealthBar::new(&object, 16, 16);
+    let mut hp0 = HealthBar::new(&object, 28, 18);
     // let mut hp1 = HealthBar::new(&object, 16, 80);
     // let mut hp2 = HealthBar::new(&object, 88, 16);
     // let mut hp3 = HealthBar::new(&object, 88, 80);
@@ -134,29 +135,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
     boss.set_x(152).set_y(32).show();
     // Boss Health Bar
     // Todo: put this as an attribute on a char/boss entity with Health and such
-    let mut bhp = BossHealthBar::new(&object, 152, 16);
+    // let mut bhp = BossHealthBar::new(&object, 152, 16);
     let mut boss_bar =Bar::new(&object, BarType::Boss_health, 152, 16, 50);
-
-    // Bottom bar
-
-    // BANNER_L_SPRITE // todo create method or something
-    let mut ban_l = object.object_sprite(BANNER_L_SPRITE.sprite(0));
-    ban_l.set_x(0).set_y(128).show();
-    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
-    ban_mid.set_x(32).set_y(128).set_hflip(true).show();
-    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
-    ban_mid.set_x(64).set_y(128).show();
-    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
-    ban_mid.set_x(96).set_y(128).set_hflip(true).show();
-    // going to need a short mid, or overlap
-    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
-    ban_mid.set_x(112).set_y(128).set_hflip(true).show();
-    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
-    ban_mid.set_x(144).set_y(128).show();
-    let mut ban_mid = object.object_sprite(BANNER_M_SPRITE.sprite(0));
-    ban_mid.set_x(176).set_y(128).set_hflip(true).show();
-    let mut ban_r = object.object_sprite(BANNER_L_SPRITE.sprite(0));
-    ban_r.set_x(208).set_y(128).set_hflip(true).show();
 
     // buttons
     let mut but_a = object.object_sprite(BTN_A_SPRITE.sprite(0));
@@ -164,7 +144,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
     let mut but_l = object.object_sprite(BTN_L_SPRITE.sprite(0));
     let mut but_r = object.object_sprite(BTN_R_SPRITE.sprite(0));
 
-    spell_effect.set_x(170).set_y(100).show();
     let bot_bar = agb::display::HEIGHT as u16;
     let right_side = agb::display::WIDTH as u16 - 22; // 16 - 6
     but_b.set_x(6).set_y(bot_bar-16).show();
@@ -199,7 +178,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
         } else if input.is_just_pressed(Button::B) {
             // the B button is pressed
             println!("B pressed Cast Cauterize!");
-            spell_effect.show();
             // start timer for how long spell lasts or cooldown
             if skull_hidden {
                 spell_effect.set_sprite(object.sprite(btna_sprite_zero));
@@ -209,19 +187,21 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 // spell_effect.hide();
             }
             skull_hidden = !skull_hidden;
+
+            // todo temp play with spell_effect scale?
             // todo begin ability cooldown.
         }else if input.is_just_pressed(Button::L) {
             // the B button is pressed
             println!("Input B pressed");
             println!("Cast Regenerate!");
 
-            bhp.take_damage(6);
+            // bhp.take_damage(6);
             // todo begin ability cooldown and add heal over time to selected char
         }else if input.is_just_pressed(Button::R) { // todo set back to `is_pressed`
             // the B button is pressed. Hold to charge mana
             println!("Trigger R is held");
             println!("Begin meditation!");
-            bhp.take_damage(2);
+            // bhp.take_damage(2);
         }
 
         // Wait for vblank, then commit the objects to the screen
