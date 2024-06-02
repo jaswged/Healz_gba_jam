@@ -84,7 +84,6 @@ impl<'obj> HealthBar<'obj> {
         // is there an easy way to know if they are in the same block?
 
         // todo match on ranges
-        println!("Test ranges where they are the same");
         let mut orig_block = match (self.health_amt, new_health){
             (0..=8, 0..=8) => {
                 println!("First sprite");
@@ -97,50 +96,32 @@ impl<'obj> HealthBar<'obj> {
             (9..=16, 9..=16) => {
                 println!("Second sprite");
                 println!("Diff is {}", 16-new_health);
-                // self.health_mid2.set_sprite(self.object.sprite(HP_1_SPRITE));
+                let new_sprite = HP_SPRITE_ARR[16-new_health];
+                self.health_mid2.set_sprite(self.object.sprite(new_sprite));
                 (2, &mut self.health_mid2, 16-self.health_amt)
             },
             (17..=24, 17..=24) => {
                 println!("Third sprite");
                 println!("Diff is {}", 24-new_health);
-                // self.health_mid3.set_sprite(self.object.sprite(HP_1_SPRITE));
+                let new_sprite = HP_SPRITE_ARR[24-new_health];
+                self.health_mid3.set_sprite(self.object.sprite(new_sprite));
                 (3, &mut self.health_mid3, 24-self.health_amt)
             },
             (25..=32, 25..=32) => {
                 println!("Fourth sprite");
                 println!("Diff is {}", 32-new_health);
-                // self.health_mid4.set_sprite(self.object.sprite(HP_1_SPRITE));
+                let new_sprite = HP_SPRITE_ARR[32-new_health];
+                self.health_mid4.set_sprite(self.object.sprite(new_sprite));
                 (4, &mut self.health_mid4, 32-self.health_amt)
             },
             (33.., 33..) => {
                 println!("Overhealed?! End sprite");
-                // self.health_end.set_sprite(self.object.sprite(HP_1_SPRITE));
+                let new_sprite = HP_SPRITE_ARR[35-new_health];
+                self.health_end.set_sprite(self.object.sprite(new_sprite));
                 (5, &mut self.health_end, 35-self.health_amt)
             }
             _ => todo!("Implement the cases where the start and end blocks arent the same"),
         };
-        // let mut next_block = match new_health{
-        //     0..=8 => {
-        //         println!("First sprite");
-        //         (1, &mut self.health_mid1, 8-new_health)
-        //     },
-        //     9..=16 => {
-        //         println!("Second sprite");
-        //         (2, &mut self.health_mid2, 16-new_health)
-        //     },
-        //     17..=24 => {
-        //         println!("Third sprite");
-        //         (3, &mut self.health_mid3, 24-new_health)
-        //     },
-        //     25..=32 => {
-        //         println!("Fourth sprite");
-        //         (4, &mut self.health_mid4, 32-new_health)
-        //     },
-        //     33.. => {
-        //         println!("Overhealed?! End sprite");
-        //         (5, &mut self.health_end, 35-new_health)
-        //     },
-        // };
 
         // if orig_block.0 == next_block.0 {
         //     println!("Is same block, just need to update the sprite");
@@ -154,31 +135,6 @@ impl<'obj> HealthBar<'obj> {
         println!("Current health is: {}", self.health_amt);
         // self.update_bar(damage);
     }
-
-    // fn get_block(&mut self, amt: usize) -> (usize, &mut Object<'obj>, usize) {
-    //     match amt{
-    //         0..=8 => {
-    //             println!("First sprite");
-    //             (1, &mut self.health_mid1, 8-amt)
-    //         },
-    //         9..=16 => {
-    //             println!("Second sprite");
-    //             (2, &mut self.health_mid2, 16-amt)
-    //         },
-    //         17..=24 => {
-    //             println!("Third sprite");
-    //             (3, &mut self.health_mid3, 24-amt)
-    //         },
-    //         25..=32 => {
-    //             println!("Fourth sprite");
-    //             (4, &mut self.health_mid4, 32-amt)
-    //         },
-    //         33.. => {
-    //             println!("Overhealed?! End sprite");
-    //             (5, &mut self.health_end, 35-amt)
-    //         },
-    //     }
-    // }
 
     // fn update_bar(&mut self, damage: usize) {
     //     // currently decrement only!

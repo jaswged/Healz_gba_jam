@@ -173,7 +173,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
         if input.is_just_pressed(Button::A){
             // todo add a cast time meter? .5 secs
             println!("A pressed. Cast Bandage!");
-            hp0.take_damage(2);
+            hp0.take_damage(1);
         } else if input.is_just_pressed(Button::B) {
             // the B button is pressed
             println!("B pressed Cast Cauterize!");
