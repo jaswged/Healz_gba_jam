@@ -122,7 +122,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
     // Player health bar todo put into a struct together with above?
     // todo having more than one hp bar hides all the character sprites?
     println!("Create first health bar");
-    let mut hp0 = HealthBar::new(&object, 28, 18);
+    let mut hp0 = HealthBar::new(&object, 28, 16);
     // let mut hp1 = HealthBar::new(&object, 16, 80);
     // let mut hp2 = HealthBar::new(&object, 88, 16);
     // let mut hp3 = HealthBar::new(&object, 88, 80);
