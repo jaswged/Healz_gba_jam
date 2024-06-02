@@ -1,4 +1,4 @@
-use alloc::vec::Vec;
+use alloc::vec::{self, Vec};
 use agb::{display::object::{Graphics, Object, OamManaged, Tag}};
 use agb::display::Priority;
 use agb::display::tiled::{RegularBackgroundSize, Tiled0, VRamManager};
@@ -6,15 +6,6 @@ use agb::display::object::Sprite;
 use agb::println;
 
 use crate::game_manager::GRAPHICS;
-
-static HP_1_SPRITE: &Sprite = GRAPHICS.tags().get("hp_1").sprite(0);
-static HP_2_SPRITE: &Sprite = GRAPHICS.tags().get("hp_2").sprite(0);
-static HP_3_SPRITE: &Sprite = GRAPHICS.tags().get("hp_3").sprite(0);
-static HP_4_SPRITE: &Sprite = GRAPHICS.tags().get("hp_4").sprite(0);
-static HP_5_SPRITE: &Sprite = GRAPHICS.tags().get("hp_5").sprite(0);
-static HP_6_SPRITE: &Sprite = GRAPHICS.tags().get("hp_6").sprite(0);
-static HP_7_SPRITE: &Sprite = GRAPHICS.tags().get("hp_7").sprite(0);
-static HP_8_SPRITE: &Sprite = GRAPHICS.tags().get("hp_8").sprite(0);
 
 // todo hashmap lookup of int to sprite
 
@@ -26,16 +17,18 @@ pub struct HealthBar<'obj> {
     health_mid4: Object<'obj>,
     health_end: Object<'obj>,
     object: &'obj OamManaged<'obj>,
+    hp_sprite_map: &Vec<&Sprite><'obj>
 }
 
 impl<'obj> HealthBar<'obj> {
-    pub fn new(object: &'obj OamManaged<'obj>, start_x: i32, start_y: i32) -> Self {
+    pub fn new(object: &'obj OamManaged<'obj>, hp_sprite_map: &Vec<&Sprite><'obj>, start_x: i32, start_y: i32) -> Self {
         let mut health_amt = 32; // 32 for easy math. set back to 35 if figure out a solution
-        let mut health_mid1 = object.object_sprite(HP_8_SPRITE);
-        let mut health_mid2 = object.object_sprite(HP_8_SPRITE);
-        let mut health_mid3 = object.object_sprite(HP_8_SPRITE);
-        let mut health_mid4 = object.object_sprite(HP_8_SPRITE);
-        let mut health_end = object.object_sprite(HP_3_SPRITE);
+        let filled = *hp_sprite_map.get(0).unwrap();
+        let mut health_mid1 = object.object_sprite(filled);
+        let mut health_mid2 = object.object_sprite(filled);
+        let mut health_mid3 = object.object_sprite(filled);
+        let mut health_mid4 = object.object_sprite(filled);
+        let mut health_end = object.object_sprite(filled);
 
         health_mid1.show();
         health_mid2.show();
@@ -50,7 +43,8 @@ impl<'obj> HealthBar<'obj> {
             health_mid3,
             health_mid4,
             health_end,
-            object
+            object,
+            hp_sprite_map
         };
 
         health_bar.set_position(start_x, start_y);
@@ -85,30 +79,35 @@ impl<'obj> HealthBar<'obj> {
             (0..=8, 0..=8) => {
                 println!("First sprite");
                 // Calculate new sprite off of the new value
-                self.health_mid1.set_sprite(self.object.sprite(HP_1_SPRITE));
+                println!("Diff is {}", 8-new_health);
+                let new_sprite = *self.hp_sprite_map.get(8-new_health).unwrap();
+                self.health_mid1.set_sprite(self.object.sprite(new_sprite));
                 (1, &mut self.health_mid1, 8-self.health_amt)
             },
             (9..=16, 9..=16) => {
                 println!("Second sprite");
-                self.health_mid2.set_sprite(self.object.sprite(HP_1_SPRITE));
+                println!("Diff is {}", 16-new_health);
+                // self.health_mid2.set_sprite(self.object.sprite(HP_1_SPRITE));
                 (2, &mut self.health_mid2, 16-self.health_amt)
             },
             (17..=24, 17..=24) => {
                 println!("Third sprite");
-                self.health_mid3.set_sprite(self.object.sprite(HP_1_SPRITE));
+                println!("Diff is {}", 24-new_health);
+                // self.health_mid3.set_sprite(self.object.sprite(HP_1_SPRITE));
                 (3, &mut self.health_mid3, 24-self.health_amt)
             },
             (25..=32, 25..=32) => {
                 println!("Fourth sprite");
-                self.health_mid4.set_sprite(self.object.sprite(HP_1_SPRITE));
+                println!("Diff is {}", 32-new_health);
+                // self.health_mid4.set_sprite(self.object.sprite(HP_1_SPRITE));
                 (4, &mut self.health_mid4, 32-self.health_amt)
             },
             (33.., 33..) => {
                 println!("Overhealed?! End sprite");
-                self.health_end.set_sprite(self.object.sprite(HP_1_SPRITE));
+                // self.health_end.set_sprite(self.object.sprite(HP_1_SPRITE));
                 (5, &mut self.health_end, 35-self.health_amt)
             }
-            _ => todo!(),
+            _ => todo!("Implement the cases where the start and end blocks arent the same"),
         };
         // let mut next_block = match new_health{
         //     0..=8 => {

@@ -25,6 +25,7 @@ mod sfx;
 mod background;
 mod bar;
 
+use alloc::vec::Vec;
 use frame::Frame;
 use crate::game_manager::{GameManager, GRAPHICS};
 
@@ -69,6 +70,7 @@ static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
 static BANNER_L_SPRITE: &Tag = GRAPHICS.tags().get("banner_l");
 static BANNER_M_SPRITE: &Tag = GRAPHICS.tags().get("banner_mid");
 
+
 // The main function must take 1 arguments and never return. The agb::entry decorator
 // ensures that everything is in order. `agb` will call this after setting up the stack
 // and interrupt handlers correctly. It will also handle creating the `Gba` struct for you.
@@ -97,10 +99,27 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
     // todo Show bottom banner and initial "story" text
 
-    include_background_gfx!(backgrounds, "000000",
-        level => deduplicate "gfx/dungeon_floor.png",
-        );
+    // Health bar sprites
+    let hp_1_sprite: &Sprite = GRAPHICS.tags().get("hp_1").sprite(0);
+    let hp_2_sprite: &Sprite = GRAPHICS.tags().get("hp_2").sprite(0);
+    let hp_3_sprite: &Sprite = GRAPHICS.tags().get("hp_3").sprite(0);
+    let hp_4_sprite: &Sprite = GRAPHICS.tags().get("hp_4").sprite(0);
+    let hp_5_sprite: &Sprite = GRAPHICS.tags().get("hp_5").sprite(0);
+    let hp_6_sprite: &Sprite = GRAPHICS.tags().get("hp_6").sprite(0);
+    let hp_7_sprite: &Sprite = GRAPHICS.tags().get("hp_7").sprite(0);
+    let hp_8_sprite: &Sprite = GRAPHICS.tags().get("hp_8").sprite(0);
 
+    let mut HP_SPRITE_MAP: Vec<&Sprite> = Vec::new();
+    HP_SPRITE_MAP.push(hp_8_sprite);
+    HP_SPRITE_MAP.push(hp_7_sprite);
+    HP_SPRITE_MAP.push(hp_6_sprite);
+    HP_SPRITE_MAP.push(hp_5_sprite);
+    HP_SPRITE_MAP.push(hp_4_sprite);
+    HP_SPRITE_MAP.push(hp_3_sprite);
+    HP_SPRITE_MAP.push(hp_2_sprite);
+    HP_SPRITE_MAP.push(hp_1_sprite);
+
+    // Spell effects
     let mut spell_effect = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
     spell_effect.set_position((170, 100));
     // spell_effect.hide();
@@ -122,10 +141,10 @@ fn game_main(mut gba: agb::Gba) -> ! {
     // Player health bar todo put into a struct together with above?
     // todo having more than one hp bar hides all the character sprites?
     println!("Create first health bar");
-    let mut hp0 = HealthBar::new(&object, 28, 16);
-    let mut hp1 = HealthBar::new(&object, 28, 80);
-    let mut hp2 = HealthBar::new(&object, 100, 16);
-    let mut hp3 = HealthBar::new(&object, 100, 80);
+    let mut hp0 = HealthBar::new(&object, &HP_SPRITE_MAP, 28, 16);
+    let mut hp1 = HealthBar::new(&object, &HP_SPRITE_MAP, 28, 80);
+    let mut hp2 = HealthBar::new(&object, &HP_SPRITE_MAP, 100, 16);
+    let mut hp3 = HealthBar::new(&object, &HP_SPRITE_MAP, 100, 80);
 
     // Frame
     let mut frame = Frame::new(&object, 0, 0);
@@ -175,7 +194,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
         if input.is_just_pressed(Button::A){
             // todo add a cast time meter? .5 secs
             println!("A pressed. Cast Bandage!");
-            println!("Take 2 damage");
             hp0.take_damage(2);
         } else if input.is_just_pressed(Button::B) {
             // the B button is pressed
