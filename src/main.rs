@@ -123,9 +123,9 @@ fn game_main(mut gba: agb::Gba) -> ! {
     // todo having more than one hp bar hides all the character sprites?
     println!("Create first health bar");
     let mut hp0 = HealthBar::new(&object, 28, 16);
-    // let mut hp1 = HealthBar::new(&object, 16, 80);
-    // let mut hp2 = HealthBar::new(&object, 88, 16);
-    // let mut hp3 = HealthBar::new(&object, 88, 80);
+    let mut hp1 = HealthBar::new(&object, 28, 80);
+    let mut hp2 = HealthBar::new(&object, 100, 16);
+    let mut hp3 = HealthBar::new(&object, 100, 80);
 
     // Frame
     let mut frame = Frame::new(&object, 0, 0);
@@ -136,7 +136,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
     // Boss Health Bar
     // Todo: put this as an attribute on a char/boss entity with Health and such
     // let mut bhp = BossHealthBar::new(&object, 152, 16);
-    let mut boss_bar =Bar::new(&object, BarType::Boss_health, 152, 16, 50);
+    // let mut boss_bar =Bar::new(&object, BarType::Boss_health, 152, 16, 50);
 
     // buttons
     let mut but_a = object.object_sprite(BTN_A_SPRITE.sprite(0));
@@ -175,6 +175,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
         if input.is_just_pressed(Button::A){
             // todo add a cast time meter? .5 secs
             println!("A pressed. Cast Bandage!");
+            println!("Take 2 damage");
+            hp0.take_damage(2);
         } else if input.is_just_pressed(Button::B) {
             // the B button is pressed
             println!("B pressed Cast Cauterize!");
