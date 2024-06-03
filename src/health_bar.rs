@@ -26,23 +26,24 @@ pub struct HealthBar<'obj> {
     health_mid4: Object<'obj>,
     health_end: Object<'obj>,
     object: &'obj OamManaged<'obj>,
+    health_max: usize
 }
 
 impl<'obj> HealthBar<'obj> {
     pub fn new(object: &'obj OamManaged<'obj>, start_x: i32, start_y: i32) -> Self {
-        let mut health_amt = 32; // 32 for easy math. set back to 35 if figure out a solution
+        let mut health_amt = 35; // 32 for easy math. set back to 35 if figure out a solution
         let filled = HP_SPRITE_ARR[0];
         let mut health_mid1 = object.object_sprite(filled);
         let mut health_mid2 = object.object_sprite(filled);
         let mut health_mid3 = object.object_sprite(filled);
         let mut health_mid4 = object.object_sprite(filled);
-        let mut health_end = object.object_sprite(filled);
+        let mut health_end = object.object_sprite(HP_3_SPRITE);
 
         health_mid1.show();
         health_mid2.show();
         health_mid3.show();
         health_mid4.show();
-        // health_end.show();
+        health_end.show();
 
         let mut health_bar = Self {
             health_amt,
@@ -51,7 +52,8 @@ impl<'obj> HealthBar<'obj> {
             health_mid3,
             health_mid4,
             health_end,
-            object
+            object,
+            health_max: health_amt
         };
 
         health_bar.set_position(start_x, start_y);
@@ -80,16 +82,56 @@ impl<'obj> HealthBar<'obj> {
         }
         let new_health = self.health_amt - damage;
 
-        // todo. if the damage value passed in is less than 8 you only have to look at 2 blocks
-        // is there an easy way to know if they are in the same block?
+        self.update_bar(new_health);
+    }
 
-        // todo match on ranges
+    pub fn take_heals(&mut self, heals: usize){
+        println!("Took {} damage!", heals);
+        // todo here jason
+        let mut new_health = self.health_amt + heals;
+        if new_health >= self.health_max {
+            println!("Is fully healed!");
+            // todo overhealed number added up here.
+            self.health_amt = self.health_max;
+            new_health = self.health_max;
+        }
+
+        self.update_bar(new_health);
+    }
+
+    fn update_bar(&mut self, new_health: usize) {
+        // Match on ranges
+        // first = 0..=8;
+        // second = 9..=16;
+        // third = 17..=24;
+        // fourth = 25..=32;
+        // last 33..
         match (self.health_amt, new_health){
             // Both are first sprite
             (0..=8, 0..=8) => {
                 println!("First sprite");
                 // Calculate new sprite off of the new value
                 println!("Diff is {}", 8-new_health);
+                let new_sprite = HP_SPRITE_ARR[8-new_health];
+                self.health_mid1.set_sprite(self.object.sprite(new_sprite));
+            },
+            // Old is 1st, New is 2nd
+            (0..=8, 9..=16) => {
+                println!("Old is 1st, New is 2nd");
+                // Calculate new sprite off of the new value
+                println!("Diff is {}", 16-new_health);
+                // show full for old.
+                self.health_mid1.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
+                // Update new
+                let new_sprite = HP_SPRITE_ARR[16-new_health];
+                self.health_mid2.set_sprite(self.object.sprite(new_sprite));
+            },
+            // Old is 2nd, New is 1st,
+            (9..=16, 0..=8) => {
+                println!("Old is 2nd, New is 1st");
+                // Calculate new sprite off of the new value
+                println!("Diff is {}", 8-new_health);
+                self.health_mid2.hide();
                 let new_sprite = HP_SPRITE_ARR[8-new_health];
                 self.health_mid1.set_sprite(self.object.sprite(new_sprite));
             },
@@ -100,41 +142,76 @@ impl<'obj> HealthBar<'obj> {
                 let new_sprite = HP_SPRITE_ARR[16-new_health];
                 self.health_mid2.set_sprite(self.object.sprite(new_sprite));
             },
-            // New is second sprite, old is thrird
-            (9..=16, 9..=16) => {
-                println!("Second sprite");
+            // Old is 3rd, New is 2nd
+            (17..=24, 9..=16) => {
+                println!("Old is 3rd, New is 2nd sprite");
                 println!("Diff is {}", 16-new_health);
+                self.health_mid3.hide();
                 let new_sprite = HP_SPRITE_ARR[16-new_health];
                 self.health_mid2.set_sprite(self.object.sprite(new_sprite));
             },
-            // Both are third sprite
+            // Old is 2nd, New is 3rd
+            (9..=16, 17..=24) => {
+                println!("Old is 2nd, New is 3rd");
+                println!("Diff is {}", 24-new_health);
+                self.health_mid2.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
+
+                let new_sprite = HP_SPRITE_ARR[24-new_health];
+                self.health_mid3.set_sprite(self.object.sprite(new_sprite));
+            },
+            // Both are 3rd sprite
             (17..=24, 17..=24) => {
                 println!("Third sprite");
                 println!("Diff is {}", 24-new_health);
                 let new_sprite = HP_SPRITE_ARR[24-new_health];
                 self.health_mid3.set_sprite(self.object.sprite(new_sprite));
             },
-            // Old is 4th new is 3rd
+            // Old is 4th, New is 3rd
             (25..=32, 17..=24) => {
                 println!("Old is 4th new is 3rd");
                 println!("Diff is {}", 24-new_health);
                 self.health_mid4.hide();
                 let new_sprite = HP_SPRITE_ARR[24-new_health];
+                self.health_mid3.set_sprite(self.object.sprite(new_sprite));
+            },
+            // Old is 3rd, New is 4th
+            (17..=24, 25..=32) => {
+                println!("Old is 3rd, New is 4th");
+                println!("Diff is {}", 32-new_health);
+                self.health_mid3.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
+
+                let new_sprite = HP_SPRITE_ARR[32-new_health];
                 self.health_mid4.set_sprite(self.object.sprite(new_sprite));
             },
-            // Both are fourth sprite
+            // Both are 4th sprite
             (25..=32, 25..=32) => {
                 println!("Fourth sprite");
                 println!("Diff is {}", 32-new_health);
                 let new_sprite = HP_SPRITE_ARR[32-new_health];
                 self.health_mid4.set_sprite(self.object.sprite(new_sprite));
             },
+            // todo here for going down and back up.
             // Both are last sprite
             (33.., 33..) => {
                 println!("Overhealed?! End sprite");
-                let new_sprite = HP_SPRITE_ARR[35-new_health];
+                let new_sprite = HP_SPRITE_ARR[40-new_health];
                 self.health_end.set_sprite(self.object.sprite(new_sprite));
+            },
+            // Old is last, new is 4th
+            (33.., 25..=32) => {
+                println!("Old is last, new is 4th");
+                self.health_end.hide();
+                let new_sprite = HP_SPRITE_ARR[32-new_health];
+                self.health_mid4.set_sprite(self.object.sprite(new_sprite));
             }
+            // old is 4th, new is last
+            (25..=32, 33..) => {
+                println!("old is 4th, new is last");
+                self.health_mid4.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
+
+                let new_sprite = HP_SPRITE_ARR[40-new_health];
+                self.health_end.set_sprite(self.object.sprite(new_sprite));
+            },
             _ => todo!("Implement the cases where the start and end blocks arent the same"),
         };
 
@@ -148,15 +225,5 @@ impl<'obj> HealthBar<'obj> {
         self.health_amt = new_health;
 
         println!("Current health is: {}", self.health_amt);
-        // self.update_bar(damage);
     }
-
-    // fn update_bar(&mut self, damage: usize) {
-    //     // currently decrement only!
-    //     println!("which one of the sprites to update");
-    //     // convert from len 35 to which of
-    //     let todo = 0;
-    //     println!("{}", todo);
-    //     // println!("\nUpdate health bar. Ptr at {}", self.heath_ptr);
-    // }
 }

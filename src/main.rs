@@ -200,7 +200,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
             // the B button is pressed. Hold to charge mana
             println!("Trigger R is held");
             println!("Begin meditation!");
-            // bhp.take_damage(2);
+            hp0.take_heals(2);
         }
 
         // Wait for vblank, then commit the objects to the screen
