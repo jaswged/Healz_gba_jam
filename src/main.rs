@@ -29,7 +29,7 @@ use alloc::vec::Vec;
 use frame::Frame;
 use crate::game_manager::{GameManager, GRAPHICS};
 
-use agb::{display::object::{Graphics, Tag}, include_aseprite, println, input::Button, include_background_gfx};
+use agb::{display::object::{Graphics, Tag}, include_aseprite, println, input::Button, include_background_gfx, rng};
 use agb::display::object::{DynamicSprite, OamManaged, PaletteVram, Size, Sprite};
 use agb::{
     display::{
@@ -45,10 +45,9 @@ use crate::background::{show_dungeon_background, show_splash_screen};
 use crate::boss_health_bar::BossHealthBar;
 use crate::health_bar::HealthBar;
 use crate::bar::{Bar, BarType};
+use crate::character::{Character, Profession};
 
 // We define some easy ways of referencing the sprites
-// static MAIN_SPRITE: &Tag = GRAPHICS.tags().get("main"); // TODO menu
-
 // TODO These are tags, not sprites
 // region Todo group buttons into own file
 static BTN_A_SPRITE: &Tag = GRAPHICS.tags().get("A");
@@ -58,17 +57,13 @@ static BTN_R_SPRITE: &Tag = GRAPHICS.tags().get("R");
 // endregion
 
 // region todo group characters into their file
-// static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
-static BARB_SPRITE_TAG: &Tag = GRAPHICS.tags().get("barb");
-static TANKEY_SPRITE_TAG: &Tag = GRAPHICS.tags().get("tankey");
-static WIZARD_SPRITE_TAG: &Tag = GRAPHICS.tags().get("wizard");
-static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer");
+static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
 static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
 // endregion
 
-// UI sprites
-static BANNER_L_SPRITE: &Tag = GRAPHICS.tags().get("banner_l");
-static BANNER_M_SPRITE: &Tag = GRAPHICS.tags().get("banner_mid");
+// // UI sprites
+// static BANNER_L_SPRITE: &Tag = GRAPHICS.tags().get("banner_l");
+// static BANNER_M_SPRITE: &Tag = GRAPHICS.tags().get("banner_mid");
 
 // The main function must take 1 arguments and never return. The agb::entry decorator
 // ensures that everything is in order. `agb` will call this after setting up the stack
@@ -81,9 +76,6 @@ fn main(mut gba: agb::Gba) -> ! {
 fn game_main(mut gba: agb::Gba) -> ! {
     // Get the object manager
     let object: OamManaged = gba.display.object.get_managed();
-    let game_manager = GameManager{
-        currently_selected_char: 0
-    };
 
     // Create a button controller. only allows for reading
     let mut input = ButtonController::new();
@@ -96,44 +88,28 @@ fn game_main(mut gba: agb::Gba) -> ! {
     // let background: &'a mut BackgroundRegular<'b>;
     show_dungeon_background(&mut vram, &tiled);
 
-    // todo Show bottom banner and initial "story" text
-
-    // Spell effects
-    let mut spell_effect = object.object_sprite(BTN_L_SPRITE.sprite(0));
-    spell_effect.set_position((170, 100));
-    // spell_effect.hide();
-
-    let skull_sprite_zero: &Sprite = BTN_L_SPRITE.sprite(0);
-    let btna_sprite_zero: &Sprite = BTN_A_SPRITE.sprite(0);
-
     // Players todo structs
     // Keep skull sprite for when dead? or tombstone or just laying flat sprite
-    let mut char0 = object.object_sprite(HEALER_SPRITE_TAG.sprite(0));
-    char0.set_x(32).set_y(28).show();
-    let mut char1 = object.object_sprite(WIZARD_SPRITE_TAG.sprite(0));
-    char1.set_x(32).set_y(92).show();
-    let mut char2 = object.object_sprite(TANKEY_SPRITE_TAG.sprite(0));
-    char2.set_x(96).set_y(28).show();
-    let mut char3 = object.object_sprite(BARB_SPRITE_TAG.sprite(0));
-    char3.set_x(96).set_y(92).show();
+    let mut wizard = Character::new(&object, 24, 28, Profession::WIZARD, 2);
+    let mut healer = Character::new(&object, 24, 92, Profession::HEALER, 0);
+    let mut tank = Character::new(&object, 96, 28, Profession::TANK, 1);
+    let mut barb = Character::new(&object, 96, 92, Profession::BARB, 2);
 
-    // Player health bar todo put into a struct together with above?
-    // todo having more than one hp bar hides all the character sprites?
-    println!("Create first health bar");
-    let mut hp0 = HealthBar::new(&object, 28, 16);
-    let mut hp1 = HealthBar::new(&object, 28, 80);
-    let mut hp2 = HealthBar::new(&object, 100, 16);
-    let mut hp3 = HealthBar::new(&object, 100, 80);
+    let mut chars = [wizard, healer, tank, barb];
+    let mut game_manager = GameManager::new();
+
+    // todo Show bottom banner and initial "story" text. No spell text yet
+    // dungeon.aseprite without the health bars on it for showing with text
 
     // Frame
-    let mut frame = Frame::new(&object, 0, 0);
+    let mut frame = Frame::new(&object);
 
     // Boss
     let mut boss = object.object_sprite(BOSS_SPRITE.sprite(0));
     boss.set_x(152).set_y(32).show();
     // Boss Health Bar
     // Todo: put this as an attribute on a char/boss entity with Health and such
-    let mut bhp = BossHealthBar::new(&object, 173, 18);
+    let mut bhp = BossHealthBar::new(&object, 173, 19);
 
     // buttons
     let mut but_a = object.object_sprite(BTN_A_SPRITE.sprite(0));
@@ -148,35 +124,26 @@ fn game_main(mut gba: agb::Gba) -> ! {
     but_l.set_x(6).set_y(bot_bar-32).show();
     but_r.set_x(right_side).set_y(bot_bar-32).show();
 
+    // Spell effects
+    let mut spell_effect = object.object_sprite(BTN_L_SPRITE.sprite(0));
+    spell_effect.set_position((170, 100)).show();
+    // spell_effect.hide();
+
+    let skull_sprite_zero: &Sprite = SKULL_SPRITE_TAG.sprite(0);
+    let btna_sprite_zero: &Sprite = BTN_A_SPRITE.sprite(0);
+
     let mut left_right = 0;
     let mut up_down = 0;
-    let mut timer = 0; // what is this for
+    let mut frame_counter: usize = 0;
 
     let mut skull_hidden: bool = false;
 
     // Begin game loop here
     loop {
-        timer += 1;
-        // DPAD update frame. i.e. Selected character
-        // x_tri and y_tri describe with -1, 0 and 1 which way the d-pad is being pressed
-        left_right = input.just_pressed_x_tri() as i32;
-        up_down = input.just_pressed_y_tri() as i32;
-        if left_right != 0 || up_down != 0 {
-            // todo need to set the currently selected character. maybe put frame as an attr on game_manager
-            frame.set_position(left_right, up_down);
-        }
+        frame_counter = frame_counter.wrapping_add(1);
 
-        // TOdo put the spells into a if-elseif block so only 1 can be hit at a time
-        // Maybe have a "Cooldown indicator" like a In center of 4 spells
-        // todo create a player "class" to keep track of all user functions
-        if input.is_just_pressed(Button::A){
-            // todo add a cast time meter? .5 secs
-            println!("A pressed. Cast Bandage!");
-            hp0.take_damage(3);
-        } else if input.is_just_pressed(Button::B) {
-            // the B button is pressed
-            println!("B pressed Cast Cauterize!");
-            // start timer for how long spell lasts or cooldown
+        if frame_counter % 30 == 0{
+            println!("Is the 30th frame. Do something!");
             if skull_hidden {
                 spell_effect.set_sprite(object.sprite(btna_sprite_zero));
                 // spell_effect.show();
@@ -185,22 +152,52 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 // spell_effect.hide();
             }
             skull_hidden = !skull_hidden;
+            bhp.take_damage(5);
 
-            // todo temp play with spell_effect scale?
+            // Damage a random character
+            let chosen = rng::gen() % 4;
+            // let chosen2 = Number::from_raw( rng::gen() % 4);
+            // todo ^ threw an error. didn't give 0-3 as expected
+            println!("Chosen character would be {}", chosen);
+            // chars[chosen as usize].health_bar.take_damage(2);
+        }
+
+        // DPAD update frame. i.e. Selected character
+        // x_tri and y_tri describe with -1, 0 and 1 which way the d-pad is being pressed
+        left_right = input.just_pressed_x_tri() as i32;
+        up_down = input.just_pressed_y_tri() as i32;
+        if left_right != 0 || up_down != 0 {
+            frame.set_position(left_right, up_down);
+            // Set the currently selected character. todo maybe put frame as an attr on game_manager
+            // game_manager.currently_selected_char = frame.selected_char; is this needed?
+        }
+
+        // TOdo put the spells into a if-else global_cooldown section
+        // Maybe have a "Cooldown indicator" like a In center of 4 spells
+        // todo create a player "class" to keep track of all user functions
+        if input.is_just_pressed(Button::A){
+            // todo add a cast time meter? .5 secs
+            println!("A pressed. Cast Bandage!");
+            chars[frame.selected_char].health_bar.take_damage(2);
+        } else if input.is_just_pressed(Button::B) {
+            // the B button is pressed
+            println!("B pressed Cast Cauterize!");
+            // start timer for how long spell lasts or cooldown
+            bhp.take_damage(4);
+
             // todo begin ability cooldown.
         }else if input.is_just_pressed(Button::L) {
             // the B button is pressed
             println!("Input B pressed");
             println!("Cast Regenerate!");
-            bhp.take_damage(4)
 
-            // bhp.take_damage(6);
+            chars[frame.selected_char].health_bar.take_heals(3);
             // todo begin ability cooldown and add heal over time to selected char
-        }else if input.is_just_pressed(Button::R) { // todo set back to `is_pressed`
+        }else if input.is_pressed(Button::R) {
             // the B button is pressed. Hold to charge mana
             println!("Trigger R is held");
             println!("Begin meditation!");
-            hp0.take_heals(2);
+            chars[frame.selected_char].health_bar.take_heals(1);
         }
 
         // Wait for vblank, then commit the objects to the screen

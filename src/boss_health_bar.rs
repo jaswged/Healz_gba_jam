@@ -72,7 +72,7 @@ impl<'obj> BossHealthBar<'obj> {
         self.health_mid1.set_position((x, y));
         self.health_mid2.set_position((x+16, y));
         self.health_mid3.set_position((x+32, y));
-        self.health_end.set_position((x+64, y));
+        self.health_end.set_position((x+48, y));
     }
 
     pub fn take_damage(&mut self, damage: usize){

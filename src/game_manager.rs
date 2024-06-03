@@ -14,5 +14,14 @@ pub static GRAPHICS: &Graphics = include_aseprite!(
 );
 
 pub struct GameManager{
-    pub currently_selected_char: i32
+    pub currently_selected_char: usize,
+    // pub chars: [Character<'obj>; 1]
+}
+
+impl GameManager {
+    pub fn new() -> Self {
+        GameManager{
+            currently_selected_char: 0,
+        }
+    }
 }
