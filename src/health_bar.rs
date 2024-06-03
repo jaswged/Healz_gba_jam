@@ -31,7 +31,7 @@ pub struct HealthBar<'obj> {
 
 impl<'obj> HealthBar<'obj> {
     pub fn new(object: &'obj OamManaged<'obj>, start_x: i32, start_y: i32) -> Self {
-        let mut health_amt = 35; // 32 for easy math. set back to 35 if figure out a solution
+        let health_amt = 35; // 32 for easy math. set back to 35 if figure out a solution
         let filled = HP_SPRITE_ARR[0];
         let mut health_mid1 = object.object_sprite(filled);
         let mut health_mid2 = object.object_sprite(filled);
@@ -105,11 +105,11 @@ impl<'obj> HealthBar<'obj> {
         // second = 9..=16;
         // third = 17..=24;
         // fourth = 25..=32;
-        // last 33..
+        // last 33..=35
         match (self.health_amt, new_health){
             // Both are first sprite
             (0..=8, 0..=8) => {
-                println!("First sprite");
+                println!("\nBoth are first sprite");
                 // Calculate new sprite off of the new value
                 println!("Diff is {}", 8-new_health);
                 let new_sprite = HP_SPRITE_ARR[8-new_health];
@@ -123,12 +123,13 @@ impl<'obj> HealthBar<'obj> {
                 // show full for old.
                 self.health_mid1.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
                 // Update new
+                self.health_mid2.show();
                 let new_sprite = HP_SPRITE_ARR[16-new_health];
                 self.health_mid2.set_sprite(self.object.sprite(new_sprite));
             },
             // Old is 2nd, New is 1st,
             (9..=16, 0..=8) => {
-                println!("Old is 2nd, New is 1st");
+                println!("\nOld is 2nd, New is 1st");
                 // Calculate new sprite off of the new value
                 println!("Diff is {}", 8-new_health);
                 self.health_mid2.hide();
@@ -156,6 +157,7 @@ impl<'obj> HealthBar<'obj> {
                 println!("Diff is {}", 24-new_health);
                 self.health_mid2.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
 
+                self.health_mid3.show();
                 let new_sprite = HP_SPRITE_ARR[24-new_health];
                 self.health_mid3.set_sprite(self.object.sprite(new_sprite));
             },
@@ -180,6 +182,7 @@ impl<'obj> HealthBar<'obj> {
                 println!("Diff is {}", 32-new_health);
                 self.health_mid3.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
 
+                self.health_mid4.show();
                 let new_sprite = HP_SPRITE_ARR[32-new_health];
                 self.health_mid4.set_sprite(self.object.sprite(new_sprite));
             },
@@ -209,6 +212,7 @@ impl<'obj> HealthBar<'obj> {
                 println!("old is 4th, new is last");
                 self.health_mid4.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
 
+                self.health_end.show();
                 let new_sprite = HP_SPRITE_ARR[40-new_health];
                 self.health_end.set_sprite(self.object.sprite(new_sprite));
             },
