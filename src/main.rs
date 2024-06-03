@@ -58,7 +58,7 @@ static BTN_R_SPRITE: &Tag = GRAPHICS.tags().get("R");
 // endregion
 
 // region todo group characters into their file
-static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
+// static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
 static BARB_SPRITE_TAG: &Tag = GRAPHICS.tags().get("barb");
 static TANKEY_SPRITE_TAG: &Tag = GRAPHICS.tags().get("tankey");
 static WIZARD_SPRITE_TAG: &Tag = GRAPHICS.tags().get("wizard");
@@ -99,11 +99,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
     // todo Show bottom banner and initial "story" text
 
     // Spell effects
-    let mut spell_effect = object.object_sprite(SKULL_SPRITE_TAG.sprite(0));
+    let mut spell_effect = object.object_sprite(BTN_L_SPRITE.sprite(0));
     spell_effect.set_position((170, 100));
     // spell_effect.hide();
 
-    let skull_sprite_zero: &Sprite = SKULL_SPRITE_TAG.sprite(0);
+    let skull_sprite_zero: &Sprite = BTN_L_SPRITE.sprite(0);
     let btna_sprite_zero: &Sprite = BTN_A_SPRITE.sprite(0);
 
     // Players todo structs
@@ -133,8 +133,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
     boss.set_x(152).set_y(32).show();
     // Boss Health Bar
     // Todo: put this as an attribute on a char/boss entity with Health and such
-    // let mut bhp = BossHealthBar::new(&object, 152, 16);
-    // let mut boss_bar =Bar::new(&object, BarType::Boss_health, 152, 16, 50);
+    let mut bhp = BossHealthBar::new(&object, 173, 18);
 
     // buttons
     let mut but_a = object.object_sprite(BTN_A_SPRITE.sprite(0));
@@ -193,6 +192,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
             // the B button is pressed
             println!("Input B pressed");
             println!("Cast Regenerate!");
+            bhp.take_damage(4)
 
             // bhp.take_damage(6);
             // todo begin ability cooldown and add heal over time to selected char

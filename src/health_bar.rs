@@ -193,10 +193,9 @@ impl<'obj> HealthBar<'obj> {
                 let new_sprite = HP_SPRITE_ARR[32-new_health];
                 self.health_mid4.set_sprite(self.object.sprite(new_sprite));
             },
-            // todo here for going down and back up.
             // Both are last sprite
             (33.., 33..) => {
-                println!("Overhealed?! End sprite");
+                println!("End sprite");
                 let new_sprite = HP_SPRITE_ARR[40-new_health];
                 self.health_end.set_sprite(self.object.sprite(new_sprite));
             },
@@ -218,13 +217,6 @@ impl<'obj> HealthBar<'obj> {
             },
             _ => todo!("Implement the cases where the start and end blocks arent the same"),
         };
-
-        // if orig_block.0 == next_block.0 {
-        //     println!("Is same block, just need to update the sprite");
-        //     println!("Diff of nextBlock: {}", next_block.2);
-        //     // Calculate new sprite off of the new value
-        //     next_block.1.set_sprite(self.object.sprite(HP_1_SPRITE));
-        // }
 
         self.health_amt = new_health;
 
