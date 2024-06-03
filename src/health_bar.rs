@@ -84,41 +84,56 @@ impl<'obj> HealthBar<'obj> {
         // is there an easy way to know if they are in the same block?
 
         // todo match on ranges
-        let mut orig_block = match (self.health_amt, new_health){
+        match (self.health_amt, new_health){
+            // Both are first sprite
             (0..=8, 0..=8) => {
                 println!("First sprite");
                 // Calculate new sprite off of the new value
                 println!("Diff is {}", 8-new_health);
                 let new_sprite = HP_SPRITE_ARR[8-new_health];
                 self.health_mid1.set_sprite(self.object.sprite(new_sprite));
-                (1, &mut self.health_mid1, 8-self.health_amt)
             },
+            // Both are second sprite
             (9..=16, 9..=16) => {
                 println!("Second sprite");
                 println!("Diff is {}", 16-new_health);
                 let new_sprite = HP_SPRITE_ARR[16-new_health];
                 self.health_mid2.set_sprite(self.object.sprite(new_sprite));
-                (2, &mut self.health_mid2, 16-self.health_amt)
             },
+            // New is second sprite, old is thrird
+            (9..=16, 9..=16) => {
+                println!("Second sprite");
+                println!("Diff is {}", 16-new_health);
+                let new_sprite = HP_SPRITE_ARR[16-new_health];
+                self.health_mid2.set_sprite(self.object.sprite(new_sprite));
+            },
+            // Both are third sprite
             (17..=24, 17..=24) => {
                 println!("Third sprite");
                 println!("Diff is {}", 24-new_health);
                 let new_sprite = HP_SPRITE_ARR[24-new_health];
                 self.health_mid3.set_sprite(self.object.sprite(new_sprite));
-                (3, &mut self.health_mid3, 24-self.health_amt)
             },
+            // Old is 4th new is 3rd
+            (25..=32, 17..=24) => {
+                println!("Old is 4th new is 3rd");
+                println!("Diff is {}", 24-new_health);
+                self.health_mid4.hide();
+                let new_sprite = HP_SPRITE_ARR[24-new_health];
+                self.health_mid4.set_sprite(self.object.sprite(new_sprite));
+            },
+            // Both are fourth sprite
             (25..=32, 25..=32) => {
                 println!("Fourth sprite");
                 println!("Diff is {}", 32-new_health);
                 let new_sprite = HP_SPRITE_ARR[32-new_health];
                 self.health_mid4.set_sprite(self.object.sprite(new_sprite));
-                (4, &mut self.health_mid4, 32-self.health_amt)
             },
+            // Both are last sprite
             (33.., 33..) => {
                 println!("Overhealed?! End sprite");
                 let new_sprite = HP_SPRITE_ARR[35-new_health];
                 self.health_end.set_sprite(self.object.sprite(new_sprite));
-                (5, &mut self.health_end, 35-self.health_amt)
             }
             _ => todo!("Implement the cases where the start and end blocks arent the same"),
         };
