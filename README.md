@@ -5,30 +5,29 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 
 ## ToDo
 
-- [ ] Create characters with health and dps logic
-- [ ] Create sprites for characters
-- [ ] Create a single heal spell to test health system
-- [ ] Create a boss to attack characters
-- [ ] Have chars dps back with
+- [x] Create characters with health and dps logic
+- [x] Create sprites for characters
+- [x] Create a single heal spell to test health system
+- [x] Create a boss to attack characters
+- [x] Have chars dps back with
   - [ ] Animations for unique attacks
-- [ ] ...
-- [ ] ...
-- [ ] ...
-- [ ] ...
+- [x] Game over screen
+- [ ] Mana bar and boss AOE cooldown
+- [ ] Text writer for player dialog or story
+- [ ] Cooldowns for spells and boss abilities
+- [ ] UI Text for spells and names
+- [ ] Pause menu for how to play on `Start/Select` buttons
+- [ ] Spell effects
+- [ ] Character animations for abilities
+- [ ] Sound effects and music
 - [ ] ...
 - [ ] everything else
 
 ### Sprite ToDos
 
-- [ ] Get 4 party member characters
 - [ ] Big bad boss guy
-- [ ] Health bar. Mana bar, Boss bar with skull. use existing one?
 - [ ] Figure out how to do text. is it all char sprites or some tool
 - [ ] Spell effects
-- [ ] Maybe make boss health bar 12-16 px high so you can fit a skull
-- [ ] ...
-- [ ] ...
-- [ ] ...
 - [ ] ...
 
 ### Nice To Haves

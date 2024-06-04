@@ -24,11 +24,6 @@ impl<'obj> Frame<'obj> {
         let mut bot_left = object.object_sprite(BOT_LEFT.sprite(0));
         let mut bot_right = object.object_sprite(BOT_RIGHT.sprite(0));
 
-        top_left.show();
-        top_right.show();
-        bot_left.show();
-        bot_right.show();
-
         let mut frame = Self {
             top_left,
             top_right,
@@ -38,6 +33,8 @@ impl<'obj> Frame<'obj> {
             up: 0,
             selected_char: 0
         };
+
+        frame.show();
 
         frame.update_position();
         frame
@@ -78,7 +75,20 @@ impl<'obj> Frame<'obj> {
         }
     }
 
+    pub fn show(&mut self){
+        self.top_left.show();
+        self.top_right.show();
+        self.bot_left.show();
+        self.bot_right.show();
+    }
+    pub fn hide(&mut self){
+        self.top_left.hide();
+        self.top_right.hide();
+        self.bot_left.hide();
+        self.bot_right.hide();
+    }
+
     fn update(&mut self){
-        // todo move frame in/out every couple frames for it to breathe animation
+        // todo move frame in/out every couple frames for a breathe animation
     }
 }

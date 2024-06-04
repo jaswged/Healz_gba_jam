@@ -1,6 +1,8 @@
 use agb::display::object::{OamManaged, Object, Tag};
+use agb::println;
 use crate::game_manager::GRAPHICS;
 use crate::health_bar::HealthBar;
+use crate::SKULL_SPRITE_TAG;
 
 static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer");
 static BARB_SPRITE_TAG: &Tag = GRAPHICS.tags().get("barb");
@@ -18,6 +20,7 @@ pub struct Character<'obj>{
     dps: i16,
     profession: Profession,
     instance: Object<'obj>,
+    pub is_dead: bool,
     pub health_bar: HealthBar<'obj>,
     object: &'obj OamManaged<'obj>,
 }
@@ -40,13 +43,57 @@ impl<'obj> Character<'obj> {
             dps,
             profession,
             instance,
+            is_dead: false,
             health_bar,
             object
         }
     }
 
-    fn show_health(){
+    pub fn take_damage(&mut self, damage: usize){
+        println!("Took {} damage!", damage);
+        if damage >= self.health_bar.health_amt {
+            println!("Is Dead!");
+            self.health_bar.health_amt = 0;
+            self.health_bar.hide_mid1();
+
+            self.is_dead = true;
+
+            // Set sprite to Skull
+            self.instance.set_sprite(self.object.sprite(SKULL_SPRITE_TAG.sprite(0)));
+            return
+        }
+        let new_health = self.health_bar.health_amt - damage;
+
+        self.health_bar.update_bar(new_health);
+    }
+
+    pub fn take_heals(&mut self, heals: usize){
+        if self.is_dead {return}
+
+        // todo here jason
+        let mut new_health = self.health_bar.health_amt + heals;
+        if new_health >= self.health_bar.health_max {
+            println!("Is fully healed!");
+            // todo overhealed number added up here.
+            self.health_bar.health_amt = self.health_bar.health_max;
+            new_health = self.health_bar.health_max;
+        }
+
+        self.health_bar.update_bar(new_health);
+    }
+
+    pub fn hide(&mut self){
+        println!("should be hiding yourself");
+        self.instance.hide();
+    }
+
+    pub fn hide_health(&mut self){
+        // hide health after creating the char so you can show dialog stuff
+        self.health_bar.hide_all();
+    }
+
+    pub fn show_health(&mut self){
         // show health later after creating the char so you can show dialog stuff
-        todo!();
+        self.health_bar.show_all();
     }
 }

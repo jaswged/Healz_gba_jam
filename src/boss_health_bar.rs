@@ -1,9 +1,6 @@
-use alloc::vec::Vec;
-// change our imports to include what we will use
-use agb::{display::object::{Graphics, Object, OamManaged, Tag}, include_aseprite, println};
+use agb::{display::object::{Object, OamManaged}};
 use agb::display::object::Sprite;
 
-// pub static GRAPHICS: &Graphics = include_aseprite!("gfx/sprites.aseprite");
 use crate::game_manager::GRAPHICS;
 
 static HP_1_SPRITE: &Sprite = GRAPHICS.tags().get("bhp_1").sprite(0);
@@ -28,7 +25,7 @@ static HP_SPRITE_ARR: [&Sprite; 16] = [HP_16_SPRITE,HP_15_SPRITE,HP_14_SPRITE,HP
     HP_4_SPRITE,HP_3_SPRITE,HP_2_SPRITE,HP_1_SPRITE];
 
 pub struct BossHealthBar<'obj> {
-    health_amt: usize,
+    pub health_amt: usize,
     health_mid1: Object<'obj>,
     health_mid2: Object<'obj>,
     health_mid3: Object<'obj>,
@@ -75,23 +72,7 @@ impl<'obj> BossHealthBar<'obj> {
         self.health_end.set_position((x+48, y));
     }
 
-    pub fn take_damage(&mut self, damage: usize){
-        // todo divide damage in half, so it effectively has 100 hp instead of 50
-        println!("Took {} damage!", damage);
-        // todo here jason
-        if damage >= self.health_amt {
-            println!("Is Dead!");
-            self.health_amt = 0;
-            self.health_mid1.hide();
-            // todo trigger game over victory? show end stats?
-            return
-        }
-        let new_health = self.health_amt - damage;
-
-        self.update_bar(new_health);
-    }
-
-    fn update_bar(&mut self, new_health: usize) {
+    pub fn update_bar(&mut self, new_health: usize) {
         // Match on ranges
         // first = 0..=16;
         // second = 17..=32;
@@ -100,47 +81,33 @@ impl<'obj> BossHealthBar<'obj> {
         match (self.health_amt, new_health){
             // Both are first sprite
             (0..=16, 0..=16) => {
-                println!("\nBoth are first sprite");
-                // Calculate new sprite off of the new value
-                println!("Diff is {}", 16-new_health);
                 let new_sprite = HP_SPRITE_ARR[16-new_health];
                 self.health_mid1.set_sprite(self.object.sprite(new_sprite));
             },
             // Old is 2nd, New is 1st,
             (17..=32, 0..=16) => {
-                println!("\nOld is 2nd, New is 1st");
-                // Calculate new sprite off of the new value
-                println!("Diff is {}", 16-new_health);
                 self.health_mid2.hide();
                 let new_sprite = HP_SPRITE_ARR[16-new_health];
                 self.health_mid1.set_sprite(self.object.sprite(new_sprite));
             },
             // Both are second sprite
             (17..=32, 17..=32) => {
-                println!("Second sprite");
-                println!("Diff is {}", 32-new_health);
                 let new_sprite = HP_SPRITE_ARR[32-new_health];
                 self.health_mid2.set_sprite(self.object.sprite(new_sprite));
             },
             // Old is 3rd, New is 2nd
             (33..=48, 17..=32) => {
-                println!("Old is 3rd, New is 2nd sprite");
-                println!("Diff is {}", 32-new_health);
                 self.health_mid3.hide();
                 let new_sprite = HP_SPRITE_ARR[32-new_health];
                 self.health_mid2.set_sprite(self.object.sprite(new_sprite));
             },
             // Both are 3rd sprite
             (33..=48, 33..=48) => {
-                println!("Third sprite");
-                println!("Diff is {}", 48-new_health);
                 let new_sprite = HP_SPRITE_ARR[48-new_health];
                 self.health_mid3.set_sprite(self.object.sprite(new_sprite));
             },
             // Old is last, New is 3rd
             (49.., 33..=48) => {
-                println!("Old is 4th new is 3rd");
-                println!("Diff is {}", 48-new_health);
                 self.health_end.hide();
                 let new_sprite = HP_SPRITE_ARR[48-new_health];
                 self.health_mid3.set_sprite(self.object.sprite(new_sprite));
@@ -154,7 +121,16 @@ impl<'obj> BossHealthBar<'obj> {
         };
 
         self.health_amt = new_health;
+    }
 
-        println!("Boss health is: {}", self.health_amt);
+    pub fn hide_all(&mut self) {
+        self.health_mid1.hide();
+        self.health_mid2.hide();
+        self.health_mid3.hide();
+        self.health_end.hide();
+    }
+
+    pub fn hide_mid1(&mut self) {
+        self.health_mid1.hide();
     }
 }

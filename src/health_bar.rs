@@ -19,14 +19,14 @@ static HP_SPRITE_ARR: [&Sprite; 8] = [HP_8_SPRITE,HP_7_SPRITE,HP_6_SPRITE,HP_5_S
 
 
 pub struct HealthBar<'obj> {
-    health_amt: usize,
+    pub health_amt: usize,
     health_mid1: Object<'obj>,
     health_mid2: Object<'obj>,
     health_mid3: Object<'obj>,
     health_mid4: Object<'obj>,
     health_end: Object<'obj>,
     object: &'obj OamManaged<'obj>,
-    health_max: usize
+    pub health_max: usize
 }
 
 impl<'obj> HealthBar<'obj> {
@@ -39,12 +39,6 @@ impl<'obj> HealthBar<'obj> {
         let mut health_mid4 = object.object_sprite(filled);
         let mut health_end = object.object_sprite(HP_3_SPRITE);
 
-        health_mid1.show();
-        health_mid2.show();
-        health_mid3.show();
-        health_mid4.show();
-        health_end.show();
-
         let mut health_bar = Self {
             health_amt,
             health_mid1,
@@ -55,6 +49,8 @@ impl<'obj> HealthBar<'obj> {
             object,
             health_max: health_amt
         };
+
+        health_bar.show_all();
 
         health_bar.set_position(start_x, start_y);
 
@@ -70,36 +66,7 @@ impl<'obj> HealthBar<'obj> {
         self.health_end.set_position((x+32, y));
     }
 
-    pub fn take_damage(&mut self, damage: usize){
-        println!("Took {} damage!", damage);
-        // todo here jason
-        if damage >= self.health_amt {
-            println!("Is Dead!");
-            self.health_amt = 0;
-            self.health_mid1.hide();
-            // todo what now? How to trigger game over? set skull sprite on player next frame?
-            return
-        }
-        let new_health = self.health_amt - damage;
-
-        self.update_bar(new_health);
-    }
-
-    pub fn take_heals(&mut self, heals: usize){
-        println!("Took {} damage!", heals);
-        // todo here jason
-        let mut new_health = self.health_amt + heals;
-        if new_health >= self.health_max {
-            println!("Is fully healed!");
-            // todo overhealed number added up here.
-            self.health_amt = self.health_max;
-            new_health = self.health_max;
-        }
-
-        self.update_bar(new_health);
-    }
-
-    fn update_bar(&mut self, new_health: usize) {
+    pub fn update_bar(&mut self, new_health: usize) {
         // Match on ranges
         // first = 0..=8;
         // second = 9..=16;
@@ -109,17 +76,11 @@ impl<'obj> HealthBar<'obj> {
         match (self.health_amt, new_health){
             // Both are first sprite
             (0..=8, 0..=8) => {
-                println!("\nBoth are first sprite");
-                // Calculate new sprite off of the new value
-                println!("Diff is {}", 8-new_health);
                 let new_sprite = HP_SPRITE_ARR[8-new_health];
                 self.health_mid1.set_sprite(self.object.sprite(new_sprite));
             },
             // Old is 1st, New is 2nd
             (0..=8, 9..=16) => {
-                println!("Old is 1st, New is 2nd");
-                // Calculate new sprite off of the new value
-                println!("Diff is {}", 16-new_health);
                 // show full for old.
                 self.health_mid1.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
                 // Update new
@@ -129,32 +90,23 @@ impl<'obj> HealthBar<'obj> {
             },
             // Old is 2nd, New is 1st,
             (9..=16, 0..=8) => {
-                println!("\nOld is 2nd, New is 1st");
-                // Calculate new sprite off of the new value
-                println!("Diff is {}", 8-new_health);
                 self.health_mid2.hide();
                 let new_sprite = HP_SPRITE_ARR[8-new_health];
                 self.health_mid1.set_sprite(self.object.sprite(new_sprite));
             },
             // Both are second sprite
             (9..=16, 9..=16) => {
-                println!("Second sprite");
-                println!("Diff is {}", 16-new_health);
                 let new_sprite = HP_SPRITE_ARR[16-new_health];
                 self.health_mid2.set_sprite(self.object.sprite(new_sprite));
             },
             // Old is 3rd, New is 2nd
             (17..=24, 9..=16) => {
-                println!("Old is 3rd, New is 2nd sprite");
-                println!("Diff is {}", 16-new_health);
                 self.health_mid3.hide();
                 let new_sprite = HP_SPRITE_ARR[16-new_health];
                 self.health_mid2.set_sprite(self.object.sprite(new_sprite));
             },
             // Old is 2nd, New is 3rd
             (9..=16, 17..=24) => {
-                println!("Old is 2nd, New is 3rd");
-                println!("Diff is {}", 24-new_health);
                 self.health_mid2.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
 
                 self.health_mid3.show();
@@ -163,23 +115,17 @@ impl<'obj> HealthBar<'obj> {
             },
             // Both are 3rd sprite
             (17..=24, 17..=24) => {
-                println!("Third sprite");
-                println!("Diff is {}", 24-new_health);
                 let new_sprite = HP_SPRITE_ARR[24-new_health];
                 self.health_mid3.set_sprite(self.object.sprite(new_sprite));
             },
             // Old is 4th, New is 3rd
             (25..=32, 17..=24) => {
-                println!("Old is 4th new is 3rd");
-                println!("Diff is {}", 24-new_health);
                 self.health_mid4.hide();
                 let new_sprite = HP_SPRITE_ARR[24-new_health];
                 self.health_mid3.set_sprite(self.object.sprite(new_sprite));
             },
             // Old is 3rd, New is 4th
             (17..=24, 25..=32) => {
-                println!("Old is 3rd, New is 4th");
-                println!("Diff is {}", 32-new_health);
                 self.health_mid3.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
 
                 self.health_mid4.show();
@@ -188,38 +134,50 @@ impl<'obj> HealthBar<'obj> {
             },
             // Both are 4th sprite
             (25..=32, 25..=32) => {
-                println!("Fourth sprite");
-                println!("Diff is {}", 32-new_health);
                 let new_sprite = HP_SPRITE_ARR[32-new_health];
                 self.health_mid4.set_sprite(self.object.sprite(new_sprite));
             },
             // Both are last sprite
             (33.., 33..) => {
-                println!("End sprite");
                 let new_sprite = HP_SPRITE_ARR[40-new_health];
                 self.health_end.set_sprite(self.object.sprite(new_sprite));
             },
             // Old is last, new is 4th
             (33.., 25..=32) => {
-                println!("Old is last, new is 4th");
                 self.health_end.hide();
                 let new_sprite = HP_SPRITE_ARR[32-new_health];
                 self.health_mid4.set_sprite(self.object.sprite(new_sprite));
             }
             // old is 4th, new is last
             (25..=32, 33..) => {
-                println!("old is 4th, new is last");
                 self.health_mid4.set_sprite(self.object.sprite(HP_SPRITE_ARR[0]));
 
                 self.health_end.show();
                 let new_sprite = HP_SPRITE_ARR[40-new_health];
                 self.health_end.set_sprite(self.object.sprite(new_sprite));
             },
-            _ => todo!("Implement the cases where the start and end blocks arent the same"),
+            _ => println!("TODO: Implement the cases where the start and end blocks arent the same"),
         };
 
         self.health_amt = new_health;
+    }
 
-        println!("Current health is: {}", self.health_amt);
+    pub fn hide_mid1(&mut self) {
+        self.health_mid1.hide();
+    }
+
+    pub fn hide_all(&mut self) {
+        self.health_mid1.hide();
+        self.health_mid2.hide();
+        self.health_mid3.hide();
+        self.health_mid4.hide();
+        self.health_end.hide();
+    }
+    pub fn show_all(&mut self) {
+        self.health_mid1.show();
+        self.health_mid2.show();
+        self.health_mid3.show();
+        self.health_mid4.show();
+        self.health_end.show();
     }
 }
