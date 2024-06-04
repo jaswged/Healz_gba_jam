@@ -17,7 +17,6 @@
 extern crate alloc;
 
 mod background;
-mod bar;
 mod boss;
 mod boss_health_bar;
 mod character;
@@ -25,6 +24,7 @@ mod frame;
 mod game_manager;
 mod health_bar;
 mod sfx;
+mod mana_bar;
 
 use crate::game_manager::{GameManager, GRAPHICS};
 use alloc::vec::Vec;
@@ -45,7 +45,7 @@ use agb::input::ButtonController;
 use crate::background::{show_dungeon_screen, show_splash_screen, tear_down_dungeon_screen, show_game_over_screen};
 use crate::boss_health_bar::BossHealthBar;
 use crate::health_bar::HealthBar;
-use crate::bar::{Bar, BarType};
+use crate::mana_bar::ManaBar;
 use crate::boss::Boss;
 use crate::character::{Character, Profession};
 
@@ -101,6 +101,9 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         // Frame
         let mut frame = Frame::new(&object);
+
+        // Mana Bar
+        let mut mana_bar = ManaBar::new(&object, 104, 120);
 
         // Boss
         let mut boss = Boss::new(&object, 152, 32);
@@ -165,8 +168,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 println!("gameover loop you Won");
                 // tear_down_dungeon_background(bg, &mut vram);
                 // show_game_over_screen(&mut input, &mut vram, &tiled);
+                println!("How to proceed from here? Press button to start over");
                 loop {
-                    println!("How to proceed from here?");
                     input.update();
                     if input.is_just_pressed(Button::A | Button::B | Button::START | Button::SELECT)
                     {
@@ -181,6 +184,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 break; // returns you to the title screen
             }
 
+            // Half a second
             if frame_counter % 30 == 0 {
                 println!("Is the 30th frame. Do something!");
                 if skull_hidden {
@@ -191,16 +195,15 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     // spell_effect.hide();
                 }
                 skull_hidden = !skull_hidden;
-                boss.take_damage(2);
+                boss.take_damage(1);
 
                 // Damage a random character
-                let chosen = rng::gen() % 4;
-                // let chosen2 = Number::from_raw( rng::gen() % 4);
-                // todo ^ threw an error. didn't give 0-3 as expected
+                let chosen = rng::gen() as usize % 4; // gives negative numbers!
                 println!("Chosen character would be {}", chosen);
-                // chars[chosen as usize].health_bar.take_damage(2);
+                chars[chosen].take_damage(4);
             }
 
+            // ************* Input ************* //
             // DPAD update frame. i.e. Selected character
             // x_tri and y_tri describe with -1, 0 and 1 which way the d-pad is being pressed
             left_right = input.just_pressed_x_tri() as i32;
@@ -212,28 +215,32 @@ fn game_main(mut gba: agb::Gba) -> ! {
             // TOdo put the spells into a if-else global_cooldown section
             // Maybe have a "Cooldown indicator" like a In center of 4 spells
             // todo create a player "class" to keep track of all user functions
-            if input.is_pressed(Button::A) {
+            if input.is_just_pressed(Button::A) {
                 // todo add a cast time meter? .5 secs
                 println!("A pressed. Cast Bandage!");
-                chars[frame.selected_char].take_damage(2);
+                chars[frame.selected_char].take_heals(2);
+                mana_bar.spend_mana(5);
             } else if input.is_just_pressed(Button::B) {
                 // the B button is pressed
                 println!("B pressed Cast Cauterize!");
                 // start timer for how long spell lasts or cooldown
-
+                chars[frame.selected_char].take_heals(8);
+                mana_bar.spend_mana(8);
                 // todo begin ability cooldown.
             } else if input.is_just_pressed(Button::L) {
                 // the B button is pressed
                 println!("Input B pressed");
                 println!("Cast Regenerate!");
-
+                mana_bar.spend_mana(3);
                 chars[frame.selected_char].take_heals(3);
                 // todo begin ability cooldown and add heal over time to selected char
             } else if input.is_pressed(Button::R) {
                 // the B button is pressed. Hold to charge mana
                 println!("Trigger R is held");
                 println!("Begin meditation!");
-                chars[frame.selected_char].take_heals(1);
+                // chars[frame.selected_char].take_heals(1);
+
+                mana_bar.recover_mana(1);
             }
 
             // Wait for vblank, then commit the objects to the screen
