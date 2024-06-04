@@ -1,7 +1,7 @@
-use agb::display::object::{OamManaged, Object, Tag};
-use agb::println;
 use crate::boss_health_bar::BossHealthBar;
 use crate::game_manager::GRAPHICS;
+use agb::display::object::{OamManaged, Object, Tag};
+use agb::println;
 
 static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
 
@@ -19,18 +19,18 @@ impl<'obj> Boss<'obj> {
         instance.set_position((start_x, start_y));
         instance.show();
 
-        let health_bar = BossHealthBar::new(&object, 173, 19);
+        let health_bar = BossHealthBar::new(object, 173, 19);
 
         Boss {
             dps: 3,
             instance,
             is_dead: false,
             health_bar,
-            object
+            object,
         }
     }
 
-    pub fn take_damage(&mut self, damage: usize){
+    pub fn take_damage(&mut self, damage: usize) {
         // todo divide damage in half, so it effectively has 100 hp instead of 50
         println!("Took {} damage!", damage);
         // todo here jason
@@ -39,14 +39,14 @@ impl<'obj> Boss<'obj> {
             self.health_bar.health_amt = 0;
             self.health_bar.hide_mid1();
             self.is_dead = true;
-            return
+            return;
         }
         let new_health = self.health_bar.health_amt - damage;
 
         self.health_bar.update_bar(new_health);
     }
 
-    pub fn hide(&mut self){
+    pub fn hide(&mut self) {
         self.instance.hide();
         self.health_bar.hide_all();
     }

@@ -13,14 +13,14 @@ pub static GRAPHICS: &Graphics = include_aseprite!(
     ,"gfx/boss_hp.aseprite" // Boss health bar
 );
 
-pub struct GameManager{
+pub struct GameManager {
     pub currently_selected_char: usize,
     // pub chars: [Character<'obj>; 1]
 }
 
 impl GameManager {
     pub fn new() -> Self {
-        GameManager{
+        GameManager {
             currently_selected_char: 0,
         }
     }

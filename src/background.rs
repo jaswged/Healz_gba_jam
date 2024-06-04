@@ -1,6 +1,8 @@
+use agb::display::tiled::{
+    MapLoan, RegularBackgroundSize, RegularMap, TileFormat, Tiled0, TiledMap, VRamManager
+};
 use agb::display::Priority;
-use agb::display::tiled::{MapLoan, RegularBackgroundSize, RegularMap, Tiled0, TiledMap, TileFormat, VRamManager};
-use agb::{include_background_gfx};
+use agb::include_background_gfx;
 use agb::input::{Button, ButtonController};
 
 include_background_gfx!(backgrounds, "000000",
@@ -8,7 +10,7 @@ include_background_gfx!(backgrounds, "000000",
         dungeon => deduplicate "gfx/dungeon.aseprite",
         ending => deduplicate "gfx/ending_page.aseprite");
 
-pub fn show_dungeon_background<'obj>(vram: &mut VRamManager, tiled: &'obj Tiled0<'obj>) -> MapLoan<'obj, RegularMap> {
+pub fn show_dungeon_screen<'obj>(vram: &mut VRamManager, tiled: &'obj Tiled0<'obj>) -> MapLoan<'obj, RegularMap> {
     let mut bg: MapLoan<RegularMap> = tiled.background(Priority::P2,
                                   RegularBackgroundSize::Background32x32,
                                   TileFormat::FourBpp);
@@ -23,7 +25,7 @@ pub fn show_dungeon_background<'obj>(vram: &mut VRamManager, tiled: &'obj Tiled0
     bg
 }
 
-pub fn tear_down_dungeon_background(mut bg: MapLoan<RegularMap>, vram: &mut VRamManager){
+pub fn tear_down_dungeon_screen(mut bg: MapLoan<RegularMap>, vram: &mut VRamManager) {
     bg.set_visible(false);
     bg.clear(vram);
     bg.commit(vram);
@@ -49,12 +51,7 @@ pub fn show_splash_screen(input: &mut ButtonController, vram: &mut VRamManager, 
 
     loop {
         input.update();
-        if input.is_just_pressed(
-            Button::A
-                | Button::B
-                | Button::START
-                | Button::SELECT,
-        ) {
+        if input.is_just_pressed(Button::A | Button::B | Button::START | Button::SELECT) {
             // todo add a help background page if Select/B is picked
             break;
         }
@@ -80,12 +77,7 @@ pub fn show_game_over_screen(input: &mut ButtonController, vram: &mut VRamManage
 
     loop {
         input.update();
-        if input.is_just_pressed(
-            Button::A
-                | Button::B
-                | Button::START
-                | Button::SELECT,
-        ) {
+        if input.is_just_pressed(Button::A | Button::B | Button::START | Button::SELECT) {
             break;
         }
         agb::display::busy_wait_for_vblank();

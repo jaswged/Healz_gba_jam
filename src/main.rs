@@ -16,19 +16,19 @@
 
 extern crate alloc;
 
-mod frame;
-mod game_manager;
-mod character;
-mod health_bar;
-mod boss_health_bar;
-mod sfx;
 mod background;
 mod bar;
 mod boss;
+mod boss_health_bar;
+mod character;
+mod frame;
+mod game_manager;
+mod health_bar;
+mod sfx;
 
+use crate::game_manager::{GameManager, GRAPHICS};
 use alloc::vec::Vec;
 use frame::Frame;
-use crate::game_manager::{GameManager, GRAPHICS};
 
 use agb::{display::object::{Graphics, Tag}, include_aseprite, println, input::Button, include_background_gfx, rng};
 use agb::display::object::{DynamicSprite, OamManaged, Object, PaletteVram, Size, Sprite};
@@ -42,7 +42,7 @@ use agb::display::palette16::Palette16;
 use agb::display::tiled::{MapLoan, RegularMap};
 use agb::fixnum::{Num, num, Vector2D};
 use agb::input::ButtonController;
-use crate::background::{show_dungeon_background, show_splash_screen, tear_down_dungeon_background, show_game_over_screen};
+use crate::background::{show_dungeon_screen, show_splash_screen, tear_down_dungeon_screen, show_game_over_screen};
 use crate::boss_health_bar::BossHealthBar;
 use crate::health_bar::HealthBar;
 use crate::bar::{Bar, BarType};
@@ -73,7 +73,7 @@ fn main(mut gba: agb::Gba) -> ! {
 
 fn game_main(mut gba: agb::Gba) -> ! {
     let mut input = ButtonController::new();
-    loop{
+    loop {
         // Get the object manager
         let object: OamManaged = gba.display.object.get_managed();
 
@@ -86,13 +86,13 @@ fn game_main(mut gba: agb::Gba) -> ! {
         println!("After splash screen");
 
         // Background
-        let mut bg = show_dungeon_background(&mut vram, &tiled);
+        let mut bg = show_dungeon_screen(&mut vram, &tiled);
 
         // Players
-        let mut wizard = Character::new(&object, 24, 28, Profession::WIZARD, 2);
-        let mut healer = Character::new(&object, 24, 92, Profession::HEALER, 0);
-        let mut tank = Character::new(&object, 96, 28, Profession::TANK, 1);
-        let mut barb = Character::new(&object, 96, 92, Profession::BARB, 2);
+        let wizard = Character::new(&object, 24, 28, Profession::Wizard, 2);
+        let healer = Character::new(&object, 24, 92, Profession::Healer, 0);
+        let tank = Character::new(&object, 96, 28, Profession::Tank, 1);
+        let barb = Character::new(&object, 96, 92, Profession::Barb, 2);
 
         let mut chars = [wizard, healer, tank, barb];
 
@@ -114,7 +114,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let bot_bar = agb::display::HEIGHT;
         let right_side = agb::display::WIDTH - 22; // 16 - 6
         but_b.set_position((6, bot_bar - 16)).show();
-        but_a.set_position((right_side, bot_bar-16)).show();
+        but_a.set_position((right_side, bot_bar - 16)).show();
         but_l.set_position((6, bot_bar - 32)).show();
         but_r.set_position((right_side, bot_bar - 32)).show();
 
@@ -136,12 +136,12 @@ fn game_main(mut gba: agb::Gba) -> ! {
             frame_counter = frame_counter.wrapping_add(1);
 
             // Did anyone die last frame
-            if chars.iter().all(|c| {c.is_dead}) {
+            if chars.iter().all(|c| c.is_dead) {
                 println!("You lose!");
 
                 // Hide all active sprites
                 // Todo create a vec with all active sprites and do one loop?
-                chars.iter_mut().for_each(|c| c.hide());
+                chars.iter_mut().for_each(Character::hide);
                 frame.hide();
                 boss.hide();
                 but_a.hide();
@@ -149,7 +149,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 but_l.hide();
                 but_r.hide();
                 spell_effect.hide();
-                tear_down_dungeon_background(bg, &mut vram);
+                tear_down_dungeon_screen(bg, &mut vram);
                 agb::display::busy_wait_for_vblank();
                 object.commit();
 
@@ -168,12 +168,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 loop {
                     println!("How to proceed from here?");
                     input.update();
-                    if input.is_just_pressed(
-                        Button::A
-                            | Button::B
-                            | Button::START
-                            | Button::SELECT,
-                    ) {
+                    if input.is_just_pressed(Button::A | Button::B | Button::START | Button::SELECT)
+                    {
                         println!("Button pressed");
                         break;
                     }
@@ -181,7 +177,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 }
 
                 // todo. spawn new boss and next room? don't break
-                tear_down_dungeon_background(bg, &mut vram);
+                tear_down_dungeon_screen(bg, &mut vram);
                 break; // returns you to the title screen
             }
 
