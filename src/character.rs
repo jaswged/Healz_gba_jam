@@ -50,7 +50,6 @@ impl<'obj> Character<'obj> {
     }
 
     pub fn take_damage(&mut self, damage: usize) {
-        println!("Took {} damage!", damage);
         if damage >= self.health_bar.health_amt {
             println!("Is Dead!");
             self.health_bar.health_amt = 0;
@@ -75,7 +74,6 @@ impl<'obj> Character<'obj> {
         // todo here jason
         let mut new_health = self.health_bar.health_amt + heals;
         if new_health >= self.health_bar.health_max {
-            println!("Is fully healed!");
             // todo overhealed number added up here.
             self.health_bar.health_amt = self.health_bar.health_max;
             new_health = self.health_bar.health_max;

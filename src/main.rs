@@ -58,6 +58,7 @@ static BTN_R_SPRITE: &Tag = GRAPHICS.tags().get("R");
 // endregion
 
 static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
+static HOURGLASS_SPRITE: &Tag = GRAPHICS.tags().get("hourglass");
 
 // // UI sprites
 // static BANNER_L_SPRITE: &Tag = GRAPHICS.tags().get("banner_l");
@@ -103,11 +104,10 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut frame = Frame::new(&object);
 
         // Mana Bar
-        let mut mana_bar = ManaBar::new(&object, 182, 118);
-        mana_bar.hide_all();
+        let mut mana_bar = ManaBar::new(&object, 28, 87);
 
         // Boss
-        let mut boss = Boss::new(&object, 152, 32);
+        let mut boss = Boss::new(&object, 152, 40, 300);
 
         // buttons
         let mut but_a = object.object_sprite(BTN_A_SPRITE.sprite(0));
@@ -128,17 +128,22 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         let skull_sprite_zero: &Sprite = SKULL_SPRITE_TAG.sprite(0);
         let btna_sprite_zero: &Sprite = BTN_A_SPRITE.sprite(0);
+        let mut hourglass: Object = object.object_sprite(HOURGLASS_SPRITE.sprite(0));
+        hourglass.set_position((90, 135));
 
         let mut left_right = 0;
         let mut up_down = 0;
         let mut frame_counter: usize = 0;
+        let mut aoe_timer: usize = 0;
 
         let mut skull_hidden: bool = false;
+        let mut tank_hit: bool = false;
 
         // Begin game loop here
         loop {
             frame_counter = frame_counter.wrapping_add(1);
 
+            // region Game over checks
             // Game Over All characters dead
             if chars.iter().all(|c| c.is_dead) {
                 println!("You lose!");
@@ -152,6 +157,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 but_b.hide();
                 but_l.hide();
                 but_r.hide();
+                mana_bar.hide_all();
                 spell_effect.hide();
                 tear_down_dungeon_screen(bg, &mut vram);
                 agb::display::busy_wait_for_vblank();
@@ -184,10 +190,31 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 tear_down_dungeon_screen(bg, &mut vram);
                 break; // returns you to the title screen
             }
+            // endregion
+
+            // Animations
+            if frame_counter & 6 == 0 {
+                hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE.animation_sprite(frame_counter)));
+            }
+
+            if frame_counter & 10 == 0 {
+                hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE.animation_sprite(frame_counter)));
+            }
+
+            // Boss aoe barr full is 35 px wide
+            if aoe_timer == boss.aoe_timer {
+                // reset aoe_bar and timer
+                aoe_timer = 0;
+                println!("Do aoe damage!");
+                for c in chars.iter_mut() {
+                    c.take_damage(8)
+                }
+            } else {
+                aoe_timer += 1;
+            }
 
             // Half a second
             if frame_counter % 30 == 0 {
-                println!("Is the 30th frame. Do something!");
                 if skull_hidden {
                     spell_effect.set_sprite(object.sprite(btna_sprite_zero));
                     // spell_effect.show();
@@ -198,10 +225,18 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 skull_hidden = !skull_hidden;
                 boss.take_damage(1);
 
-                // Damage a random character
-                // gives neg numbers so cast as usize!
-                let chosen = rng::gen() as usize % 4;
-                chars[chosen].take_damage(4);
+                // Damage the players
+                if tank_hit && !chars[2].is_dead {
+                    // Every other attack should be against the tank
+                    chars[2].take_damage(4);
+                } else {
+                    // Damage a random character
+                    // gives neg numbers so cast as usize!
+                    // todo only let boss attack alive characters
+                    let chosen = rng::gen() as usize % 4;
+                    chars[chosen].take_damage(4);
+                }
+                tank_hit = !tank_hit;
             }
 
             // ************* Input ************* //
@@ -216,39 +251,47 @@ fn game_main(mut gba: agb::Gba) -> ! {
             // TOdo put the spells into a if-else global_cooldown section
             // Maybe have a "Cooldown indicator" like a In center of 4 spells
             // todo create a player "class" to keep track of all user functions
-            if input.is_just_pressed(Button::A) {
-                if mana_bar.mana_amt >= 5 {
-                    // todo add a cast time meter? .5 secs
-                    println!("A pressed. Cast Bandage!");
-                    chars[frame.selected_char].take_heals(2);
-                    mana_bar.spend_mana(5);
-                }else { println!("Out of manna bruv"); }
-            } else if input.is_just_pressed(Button::B) {
-                if mana_bar.mana_amt >= 8 {
-                    // the B button is pressed
-                    println!("B pressed Cast Cauterize!");
-                    // start timer for how long spell lasts or cooldown
-                    chars[frame.selected_char].take_heals(8);
-                    mana_bar.spend_mana(8);
-                    // todo begin ability cooldown.
-                }else { println!("Out of manna bruv"); }
-            } else if input.is_just_pressed(Button::L) {
-                if mana_bar.mana_amt >= 3 {
-                // the B button is pressed
-                println!("Input B pressed");
-                println!("Cast Regenerate!");
-                mana_bar.spend_mana(3);
-                chars[frame.selected_char].take_heals(3);
-                // todo begin ability cooldown and add heal over time to selected char
-            }else { println!("Out of manna bruv"); }
-            } else if input.is_pressed(Button::R) {
-                // the B button is pressed. Hold to charge mana
-                println!("Trigger R is held");
-                println!("Begin meditation!");
-                // chars[frame.selected_char].take_heals(1);
-
-                mana_bar.recover_mana(1);
+            if chars[1].is_dead {
+                println!("Cant cast spell when dead my dude!")
+                // todo show a sprite/message of tank saying, "Wipe it. Healer died again..."
             }
+            else{
+                if input.is_just_pressed(Button::A) {
+                    if mana_bar.mana_amt >= 5 {
+                        // todo add a cast time meter? .5 secs
+                        println!("A pressed. Cast Bandage!");
+                        chars[frame.selected_char].take_heals(2);
+                        mana_bar.spend_mana(5);
+                    } else { println!("Out of manna bruv"); }
+                } else if input.is_just_pressed(Button::B) {
+                    if mana_bar.mana_amt >= 8 {
+                        // the B button is pressed
+                        println!("B pressed Cast Cauterize!");
+                        // start timer for how long spell lasts or cooldown
+                        chars[frame.selected_char].take_heals(8);
+                        mana_bar.spend_mana(8);
+                        // todo begin ability cooldown.
+                        // show hourglass. todo hide when cooldown is over
+                        hourglass.show();
+                    } else { println!("Out of manna bruv"); }
+                } else if input.is_just_pressed(Button::L) {
+                    if mana_bar.mana_amt >= 3 {
+                        // the B button is pressed
+                        println!("Input B pressed");
+                        println!("Cast Regenerate!");
+                        mana_bar.spend_mana(3);
+                        chars[frame.selected_char].take_heals(3);
+                        // todo begin ability cooldown and add heal over time to selected char
+                    } else { println!("Out of manna bruv"); }
+                } else if input.is_pressed(Button::R) {
+                    // the B button is pressed. Hold to charge mana
+                    println!("Trigger R is held");
+                    println!("Begin meditation!");
+                    // chars[frame.selected_char].take_heals(1);
+
+                    mana_bar.recover_mana(1);
+                }
+        }
 
             // Wait for vblank, then commit the objects to the screen
             agb::display::busy_wait_for_vblank();

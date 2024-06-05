@@ -12,10 +12,11 @@ pub struct Boss<'obj>{
     pub is_dead: bool,
     pub health_bar: BossHealthBar<'obj>,
     object: &'obj OamManaged<'obj>,
+    pub aoe_timer: usize,
 }
 
 impl<'obj> Boss<'obj> {
-    pub fn new(object: &'obj OamManaged<'obj>, start_x: i32, start_y: i32) -> Self {
+    pub fn new(object: &'obj OamManaged<'obj>, start_x: i32, start_y: i32, aoe_timer: usize) -> Self {
         let mut instance = object.object_sprite(BOSS_SPRITE.sprite(0));
         instance.set_position((start_x, start_y));
         instance.show();
@@ -28,13 +29,12 @@ impl<'obj> Boss<'obj> {
             is_dead: false,
             health_bar,
             object,
+            aoe_timer,
         }
     }
 
     pub fn take_damage(&mut self, damage: usize) {
         // todo divide damage in half, so it effectively has 100 hp instead of 50
-        println!("Took {} damage!", damage);
-        // todo here jason
         if damage >= self.health_bar.health_amt {
             println!("Boss is Dead! You win bruv");
             self.health_bar.health_amt = 0;
