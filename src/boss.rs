@@ -2,6 +2,7 @@ use crate::boss_health_bar::BossHealthBar;
 use crate::game_manager::GRAPHICS;
 use agb::display::object::{OamManaged, Object, Tag};
 use agb::println;
+use crate::mana_bar::{BarType, Bar};
 use crate::SKULL_SPRITE_TAG;
 
 static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
@@ -11,6 +12,7 @@ pub struct Boss<'obj>{
     instance: Object<'obj>,
     pub is_dead: bool,
     pub health_bar: BossHealthBar<'obj>,
+    pub cooldown_bar: Bar<'obj>,
     object: &'obj OamManaged<'obj>,
     pub aoe_timer: usize,
 }
@@ -22,12 +24,14 @@ impl<'obj> Boss<'obj> {
         instance.show();
 
         let health_bar = BossHealthBar::new(object, 173, 19);
+        let cooldown_bar = Bar::new(&object, BarType::Cooldown, 188, 32);
 
         Boss {
             dps: 3,
             instance,
             is_dead: false,
             health_bar,
+            cooldown_bar,
             object,
             aoe_timer,
         }
@@ -51,5 +55,6 @@ impl<'obj> Boss<'obj> {
     pub fn hide(&mut self) {
         self.instance.hide();
         self.health_bar.hide_all();
+        self.cooldown_bar.hide_all();
     }
 }

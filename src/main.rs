@@ -45,7 +45,7 @@ use agb::input::ButtonController;
 use crate::background::{show_dungeon_screen, show_splash_screen, tear_down_dungeon_screen, show_game_over_screen};
 use crate::boss_health_bar::BossHealthBar;
 use crate::health_bar::HealthBar;
-use crate::mana_bar::ManaBar;
+use crate::mana_bar::{BarType, Bar};
 use crate::boss::Boss;
 use crate::character::{Character, Profession};
 
@@ -104,7 +104,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut frame = Frame::new(&object);
 
         // Mana Bar
-        let mut mana_bar = ManaBar::new(&object, 28, 87);
+        let mut mana_bar = Bar::new(&object, BarType::Mana, 28, 87);
 
         // Boss
         let mut boss = Boss::new(&object, 152, 40, 300);
@@ -257,29 +257,29 @@ fn game_main(mut gba: agb::Gba) -> ! {
             }
             else{
                 if input.is_just_pressed(Button::A) {
-                    if mana_bar.mana_amt >= 5 {
+                    if mana_bar.bar_amt >= 5 {
                         // todo add a cast time meter? .5 secs
                         println!("A pressed. Cast Bandage!");
                         chars[frame.selected_char].take_heals(2);
-                        mana_bar.spend_mana(5);
+                        mana_bar.lose_amount(5);
                     } else { println!("Out of manna bruv"); }
                 } else if input.is_just_pressed(Button::B) {
-                    if mana_bar.mana_amt >= 8 {
+                    if mana_bar.bar_amt >= 8 {
                         // the B button is pressed
                         println!("B pressed Cast Cauterize!");
                         // start timer for how long spell lasts or cooldown
                         chars[frame.selected_char].take_heals(8);
-                        mana_bar.spend_mana(8);
+                        mana_bar.lose_amount(8);
                         // todo begin ability cooldown.
                         // show hourglass. todo hide when cooldown is over
                         hourglass.show();
                     } else { println!("Out of manna bruv"); }
                 } else if input.is_just_pressed(Button::L) {
-                    if mana_bar.mana_amt >= 3 {
+                    if mana_bar.bar_amt >= 3 {
                         // the B button is pressed
                         println!("Input B pressed");
                         println!("Cast Regenerate!");
-                        mana_bar.spend_mana(3);
+                        mana_bar.lose_amount(3);
                         chars[frame.selected_char].take_heals(3);
                         // todo begin ability cooldown and add heal over time to selected char
                     } else { println!("Out of manna bruv"); }
@@ -289,7 +289,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     println!("Begin meditation!");
                     // chars[frame.selected_char].take_heals(1);
 
-                    mana_bar.recover_mana(1);
+                    mana_bar.gain_amount(1);
                 }
         }
 

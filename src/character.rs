@@ -3,6 +3,7 @@ use crate::health_bar::HealthBar;
 use crate::SKULL_SPRITE_TAG;
 use agb::display::object::{OamManaged, Object, Tag};
 use agb::println;
+use crate::mana_bar::{BarType, Bar};
 
 static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer");
 static BARB_SPRITE_TAG: &Tag = GRAPHICS.tags().get("barb");
@@ -21,7 +22,7 @@ pub struct Character<'obj> {
     profession: Profession,
     instance: Object<'obj>,
     pub is_dead: bool,
-    pub health_bar: HealthBar<'obj>,
+    pub health_bar: Bar<'obj>,
     object: &'obj OamManaged<'obj>,
 }
 
@@ -37,7 +38,8 @@ impl<'obj> Character<'obj> {
         instance.set_position((start_x, start_y));
         instance.show();
 
-        let health_bar = HealthBar::new(object, start_x + 4, start_y-12);
+        // let health_bar = HealthBar::new(object, start_x + 4, start_y-12);
+        let health_bar = Bar::new(object, BarType::Health, start_x + 4, start_y-12);
 
         Character {
             dps,
@@ -50,10 +52,10 @@ impl<'obj> Character<'obj> {
     }
 
     pub fn take_damage(&mut self, damage: usize) {
-        if damage >= self.health_bar.health_amt {
+        if damage >= self.health_bar.bar_amt {
             println!("Is Dead!");
-            self.health_bar.health_amt = 0;
-            self.health_bar.hide_mid1();
+            self.health_bar.bar_amt = 0;
+            self.health_bar.hide_mana_mid1();
 
             self.is_dead = true;
 
@@ -61,7 +63,7 @@ impl<'obj> Character<'obj> {
             self.instance.set_sprite(self.object.sprite(SKULL_SPRITE_TAG.sprite(0)));
             return
         }
-        let new_health = self.health_bar.health_amt - damage;
+        let new_health = self.health_bar.bar_amt - damage;
 
         self.health_bar.update_bar(new_health);
     }
@@ -72,11 +74,11 @@ impl<'obj> Character<'obj> {
         }
 
         // todo here jason
-        let mut new_health = self.health_bar.health_amt + heals;
-        if new_health >= self.health_bar.health_max {
+        let mut new_health = self.health_bar.bar_amt + heals;
+        if new_health >= self.health_bar.bar_max {
             // todo overhealed number added up here.
-            self.health_bar.health_amt = self.health_bar.health_max;
-            new_health = self.health_bar.health_max;
+            self.health_bar.bar_amt = self.health_bar.bar_max;
+            new_health = self.health_bar.bar_max;
         }
 
         self.health_bar.update_bar(new_health);
