@@ -2,6 +2,7 @@ use crate::boss_health_bar::BossHealthBar;
 use crate::game_manager::GRAPHICS;
 use agb::display::object::{OamManaged, Object, Tag};
 use agb::println;
+use crate::SKULL_SPRITE_TAG;
 
 static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
 
@@ -39,6 +40,7 @@ impl<'obj> Boss<'obj> {
             self.health_bar.health_amt = 0;
             self.health_bar.hide_mid1();
             self.is_dead = true;
+            self.instance.set_sprite(self.object.sprite(SKULL_SPRITE_TAG.sprite(0)));
             return;
         }
         let new_health = self.health_bar.health_amt - damage;

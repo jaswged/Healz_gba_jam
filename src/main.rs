@@ -103,7 +103,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut frame = Frame::new(&object);
 
         // Mana Bar
-        let mut mana_bar = ManaBar::new(&object, 104, 120);
+        let mut mana_bar = ManaBar::new(&object, 182, 118);
+        mana_bar.hide_all();
 
         // Boss
         let mut boss = Boss::new(&object, 152, 32);
@@ -123,7 +124,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         // Spell effects
         let mut spell_effect = object.object_sprite(BTN_L_SPRITE.sprite(0));
-        spell_effect.set_position((170, 100)).show();
+        spell_effect.set_position((170, 100));//.show();
 
         let skull_sprite_zero: &Sprite = SKULL_SPRITE_TAG.sprite(0);
         let btna_sprite_zero: &Sprite = BTN_A_SPRITE.sprite(0);
@@ -138,7 +139,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
         loop {
             frame_counter = frame_counter.wrapping_add(1);
 
-            // Did anyone die last frame
+            // Game Over All characters dead
             if chars.iter().all(|c| c.is_dead) {
                 println!("You lose!");
 
@@ -198,8 +199,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 boss.take_damage(1);
 
                 // Damage a random character
-                let chosen = rng::gen() as usize % 4; // gives negative numbers!
-                println!("Chosen character would be {}", chosen);
+                // gives neg numbers so cast as usize!
+                let chosen = rng::gen() as usize % 4;
                 chars[chosen].take_damage(4);
             }
 
@@ -216,24 +217,30 @@ fn game_main(mut gba: agb::Gba) -> ! {
             // Maybe have a "Cooldown indicator" like a In center of 4 spells
             // todo create a player "class" to keep track of all user functions
             if input.is_just_pressed(Button::A) {
-                // todo add a cast time meter? .5 secs
-                println!("A pressed. Cast Bandage!");
-                chars[frame.selected_char].take_heals(2);
-                mana_bar.spend_mana(5);
+                if mana_bar.mana_amt >= 5 {
+                    // todo add a cast time meter? .5 secs
+                    println!("A pressed. Cast Bandage!");
+                    chars[frame.selected_char].take_heals(2);
+                    mana_bar.spend_mana(5);
+                }else { println!("Out of manna bruv"); }
             } else if input.is_just_pressed(Button::B) {
-                // the B button is pressed
-                println!("B pressed Cast Cauterize!");
-                // start timer for how long spell lasts or cooldown
-                chars[frame.selected_char].take_heals(8);
-                mana_bar.spend_mana(8);
-                // todo begin ability cooldown.
+                if mana_bar.mana_amt >= 8 {
+                    // the B button is pressed
+                    println!("B pressed Cast Cauterize!");
+                    // start timer for how long spell lasts or cooldown
+                    chars[frame.selected_char].take_heals(8);
+                    mana_bar.spend_mana(8);
+                    // todo begin ability cooldown.
+                }else { println!("Out of manna bruv"); }
             } else if input.is_just_pressed(Button::L) {
+                if mana_bar.mana_amt >= 3 {
                 // the B button is pressed
                 println!("Input B pressed");
                 println!("Cast Regenerate!");
                 mana_bar.spend_mana(3);
                 chars[frame.selected_char].take_heals(3);
                 // todo begin ability cooldown and add heal over time to selected char
+            }else { println!("Out of manna bruv"); }
             } else if input.is_pressed(Button::R) {
                 // the B button is pressed. Hold to charge mana
                 println!("Trigger R is held");

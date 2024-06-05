@@ -3,6 +3,8 @@ use agb::println;
 
 use crate::game_manager::GRAPHICS;
 
+
+static MN_0_SPRITE: &Sprite = GRAPHICS.tags().get("mn_0").sprite(0);
 static MN_1_SPRITE: &Sprite = GRAPHICS.tags().get("mn_1").sprite(0);
 static MN_2_SPRITE: &Sprite = GRAPHICS.tags().get("mn_2").sprite(0);
 static MN_3_SPRITE: &Sprite = GRAPHICS.tags().get("mn_3").sprite(0);
@@ -11,7 +13,7 @@ static MN_5_SPRITE: &Sprite = GRAPHICS.tags().get("mn_5").sprite(0);
 static MN_6_SPRITE: &Sprite = GRAPHICS.tags().get("mn_6").sprite(0);
 static MN_7_SPRITE: &Sprite = GRAPHICS.tags().get("mn_7").sprite(0);
 static MN_8_SPRITE: &Sprite = GRAPHICS.tags().get("mn_8").sprite(0);
-static MN_SPRITE_ARR: [&Sprite; 8] = [
+static MN_SPRITE_ARR: [&Sprite; 9] = [
     MN_8_SPRITE,
     MN_7_SPRITE,
     MN_6_SPRITE,
@@ -20,6 +22,7 @@ static MN_SPRITE_ARR: [&Sprite; 8] = [
     MN_3_SPRITE,
     MN_2_SPRITE,
     MN_1_SPRITE,
+    MN_0_SPRITE,
 ];
 
 pub struct ManaBar<'obj> {
@@ -80,6 +83,9 @@ impl<'obj> ManaBar<'obj> {
         match (self.mana_amt, new_mana) {
             // Both are first sprite
             (0..=8, 0..=8) => {
+                println!("Is in first mana sprite");
+                println!("Mana before: {}, after {}", self.mana_amt, new_mana);
+                println!("8-new_mana = {}", 8-new_mana);
                 let new_sprite = MN_SPRITE_ARR[8 - new_mana];
                 self.mana_mid1.set_sprite(self.object.sprite(new_sprite));
             }
