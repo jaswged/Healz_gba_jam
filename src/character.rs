@@ -1,9 +1,8 @@
 use crate::game_manager::GRAPHICS;
-use crate::health_bar::HealthBar;
 use crate::SKULL_SPRITE_TAG;
 use agb::display::object::{OamManaged, Object, Tag};
 use agb::println;
-use crate::mana_bar::{BarType, Bar};
+use crate::bar::{BarType, Bar};
 
 static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer");
 static BARB_SPRITE_TAG: &Tag = GRAPHICS.tags().get("barb");

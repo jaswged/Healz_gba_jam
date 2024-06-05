@@ -22,9 +22,8 @@ mod boss_health_bar;
 mod character;
 mod frame;
 mod game_manager;
-mod health_bar;
 mod sfx;
-mod mana_bar;
+mod bar;
 
 use crate::game_manager::{GameManager, GRAPHICS};
 use alloc::vec::Vec;
@@ -44,8 +43,7 @@ use agb::fixnum::{Num, num, Vector2D};
 use agb::input::ButtonController;
 use crate::background::{show_dungeon_screen, show_splash_screen, tear_down_dungeon_screen, show_game_over_screen};
 use crate::boss_health_bar::BossHealthBar;
-use crate::health_bar::HealthBar;
-use crate::mana_bar::{BarType, Bar};
+use crate::bar::{BarType, Bar};
 use crate::boss::Boss;
 use crate::character::{Character, Profession};
 

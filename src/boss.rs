@@ -2,7 +2,7 @@ use crate::boss_health_bar::BossHealthBar;
 use crate::game_manager::GRAPHICS;
 use agb::display::object::{OamManaged, Object, Tag};
 use agb::println;
-use crate::mana_bar::{BarType, Bar};
+use crate::bar::{BarType, Bar};
 use crate::SKULL_SPRITE_TAG;
 
 static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
