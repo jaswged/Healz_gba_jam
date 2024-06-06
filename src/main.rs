@@ -105,7 +105,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut mana_bar = Bar::new(&object, BarType::Mana, 28, 87);
 
         // Boss
-        let mut boss = Boss::new(&object, 152, 40, 300);
+        // 280 is divisible by 35 for cooldown bar slots
+        let mut boss = Boss::new(&object, 152, 40, 280);
 
         // buttons
         let mut but_a = object.object_sprite(BTN_A_SPRITE.sprite(0));
@@ -191,24 +192,15 @@ fn game_main(mut gba: agb::Gba) -> ! {
             // endregion
 
             // Animations
-            if frame_counter & 6 == 0 {
+            if frame_counter % 8 == 0 {
                 hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE.animation_sprite(frame_counter)));
+                boss.cooldown_bar.gain_amount(1);
             }
 
             if frame_counter & 10 == 0 {
-                hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE.animation_sprite(frame_counter)));
-            }
-
-            // Boss aoe barr full is 35 px wide
-            if aoe_timer == boss.aoe_timer {
-                // reset aoe_bar and timer
-                aoe_timer = 0;
-                println!("Do aoe damage!");
-                for c in chars.iter_mut() {
-                    c.take_damage(8)
-                }
-            } else {
-                aoe_timer += 1;
+                // hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE.animation_sprite(frame_counter)));
+                // boss.cooldown_bar.gain_amount(1);
+                println!("every tenth");
             }
 
             // Half a second
@@ -232,9 +224,24 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     // gives neg numbers so cast as usize!
                     // todo only let boss attack alive characters
                     let chosen = rng::gen() as usize % 4;
-                    chars[chosen].take_damage(4);
+                    // vary the damage amount
+                    let dmg = rng::gen() as usize % 2;
+                    // println!("Should be 1-3 damage? {}", dmg + 1);
+                    chars[chosen].take_damage(dmg + 1);
                 }
                 tank_hit = !tank_hit;
+            }
+
+            // Boss aoe barr full is 35 px wide
+            if aoe_timer == boss.aoe_timer {
+                // reset aoe_bar and timer
+                aoe_timer = 0;
+                for c in chars.iter_mut() {
+                    c.take_damage(7)
+                }
+                boss.cooldown_bar.reset_cooldown();
+            } else {
+                aoe_timer += 1;
             }
 
             // ************* Input ************* //
@@ -285,9 +292,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     // the B button is pressed. Hold to charge mana
                     println!("Trigger R is held");
                     println!("Begin meditation!");
-                    // chars[frame.selected_char].take_heals(1);
-
-                    mana_bar.gain_amount(1);
+                    // todo slow down how fast mana is gained.
+                    // todo move this % check above to an above section to avoid duplicate checks
+                    if frame_counter % 10 == 0 {
+                        mana_bar.gain_amount(1);
+                    }
                 }
         }
 

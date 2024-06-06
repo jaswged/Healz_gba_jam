@@ -8,6 +8,7 @@ use crate::SKULL_SPRITE_TAG;
 static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
 
 pub struct Boss<'obj>{
+    // aoe_timer should be easily divisible by 35 for the aeo bar
     dps: i16,
     instance: Object<'obj>,
     pub is_dead: bool,
@@ -24,7 +25,7 @@ impl<'obj> Boss<'obj> {
         instance.show();
 
         let health_bar = BossHealthBar::new(object, 173, 19);
-        let cooldown_bar = Bar::new(&object, BarType::Cooldown, 188, 32);
+        let cooldown_bar = Bar::new(&object, BarType::Cooldown, 188, 30);
 
         Boss {
             dps: 3,

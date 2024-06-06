@@ -86,18 +86,29 @@ pub struct Bar<'obj> {
 
 impl<'obj> Bar<'obj> {
     pub fn new(object: &'obj OamManaged<'obj>, bar_type: BarType, start_x: i32, start_y: i32) -> Self {
-        let bar_amt = 35;
+        let bar_max = 35;
+        let mut bar_amt = bar_max;
+
         let arr = match bar_type {
             BarType::Mana => {MN_SPRITE_ARR}
             BarType::Cooldown => {CD_SPRITE_ARR}
             BarType::Health => {HP_SPRITE_ARR}
         };
-        let filled = arr[0];
+        let mut filled = arr[0];
+        let mut end = object.object_sprite(arr[5]);
+
+        println!("Before is cooldown check");
+        if matches!(bar_type, BarType::Cooldown) {
+            println!("Is cooldown");
+            bar_amt = 0;
+            filled = arr[8];
+            end = object.object_sprite(filled);
+        };
+
         let mid1 = object.object_sprite(filled);
         let mid2 = object.object_sprite(filled);
         let mid3 = object.object_sprite(filled);
         let mid4 = object.object_sprite(filled);
-        let end = object.object_sprite(arr[5]);
 
         let mut mana_bar = Self {
             bar_type,
@@ -108,7 +119,7 @@ impl<'obj> Bar<'obj> {
             mid4,
             end,
             object,
-            bar_max: bar_amt,
+            bar_max,
         };
 
         mana_bar.show_all();
@@ -263,5 +274,15 @@ impl<'obj> Bar<'obj> {
         self.mid3.show();
         self.mid4.show();
         self.end.show();
+    }
+
+    pub fn reset_cooldown(&mut self) {
+        println!("Inside reset cooldown");
+        self.bar_amt = 0;
+        self.mid1.set_sprite(self.object.sprite(MT_SPRITE));
+        self.mid2.set_sprite(self.object.sprite(MT_SPRITE));
+        self.mid3.set_sprite(self.object.sprite(MT_SPRITE));
+        self.mid4.set_sprite(self.object.sprite(MT_SPRITE));
+        self.end.set_sprite(self.object.sprite(MT_SPRITE));
     }
 }
