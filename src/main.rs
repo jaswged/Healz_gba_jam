@@ -260,21 +260,21 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 println!("Cant cast spell when dead my dude!")
                 // todo show a sprite/message of tank saying, "Wipe it. Healer died again..."
             }
-            else{
+            else {
                 if input.is_just_pressed(Button::A) {
-                    if mana_bar.bar_amt >= 5 {
+                    if mana_bar.bar_amt >= 4 {
                         // todo add a cast time meter? .5 secs
                         println!("A pressed. Cast Bandage!");
-                        chars[frame.selected_char].take_heals(2);
-                        mana_bar.lose_amount(5);
+                        chars[frame.selected_char].take_heals(3);
+                        mana_bar.lose_amount(4);
                     } else { println!("Out of manna bruv"); }
                 } else if input.is_just_pressed(Button::B) {
-                    if mana_bar.bar_amt >= 8 {
+                    if mana_bar.bar_amt >= 7 {
                         // the B button is pressed
                         println!("B pressed Cast Cauterize!");
                         // start timer for how long spell lasts or cooldown
                         chars[frame.selected_char].take_heals(8);
-                        mana_bar.lose_amount(8);
+                        mana_bar.lose_amount(7);
                         // todo begin ability cooldown.
                         // show hourglass. todo hide when cooldown is over
                         hourglass.show();
@@ -287,6 +287,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         mana_bar.lose_amount(3);
                         chars[frame.selected_char].take_heals(3);
                         // todo begin ability cooldown and add heal over time to selected char
+                        // Show hour glass cooldown, spawn sprite effect over chosen char and decrement
                     } else { println!("Out of manna bruv"); }
                 } else if input.is_pressed(Button::R) {
                     // the B button is pressed. Hold to charge mana

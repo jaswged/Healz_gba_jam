@@ -12,11 +12,10 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 - [x] Have chars dps back with
   - [ ] Animations for unique attacks
 - [x] Game over screen
-- [ ] Mana bar and boss AOE cooldown
+- [x] Mana bar and boss AOE cooldown
 - [ ] Text writer for player dialog or story
 - [ ] Cooldowns for spells and boss abilities
 - [ ] UI Text for spells and names
-- [ ] Pause menu for how to play on `Start/Select` buttons
 - [ ] Spell effects
 - [ ] Character animations for abilities
 - [ ] Sound effects and music
@@ -33,29 +32,41 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 ### Nice To Haves
 
 - [ ] Intro battle for warming up to the real deal, like a tutorial?
+- [ ] Pause menu for how to play on `Start/Select` buttons
 - [ ] Keep track of total healing and over-healing so at the end you can share those stats.
 - [ ] Rogue-like dungeons with more packs and bosses
 - [ ] Perhaps a story for the whole dungeon
 - [ ] StS style overworld going node to node
-- [ ] Gear found on boss to make later fights easier
-- [ ] Xp for level ups
+- [ ] Gear found on boss to make later fights easier (Lewt)
+- [ ] Xp for level ups and character progression
 - [ ] Save game logic
 - [ ] ...
 
 ## Gameplay
 
-`todo!();`
-
 Each character has a set dps and health.
+
+## Characters
+
+todo!();
 
 E.G.
 
-| Character | Health  | DPS       |
-|-----------|---------|-----------|
-| Tank-Man  | 20      | 2         |
-| Whizard   | 12      | 4         |
-| Rangeer   | 16      | 3         |
-| Boss Boi  | 100     | 5dps/3dps |
+| Character | Health  | DPS       | About                       |
+|-----------|---------|-----------|-----------------------------|
+| Tank-Man  | 20      | 2         | Knight from the royal guard |
+| Whizard   | 12      | 4         | Wise and powerful           |
+| Rangeer   | 16      | 3         | Skilled hunter              |
+| MySelf    | 16      | 3         | Cleric devoted to healing   |
+| Boss Boi  | 100     | 5dps/3dps | Evil lich or something      |
+
+Boss Ideas:
+
+- Corrupted Priest/Wizard
+- Dragon
+- Skeleton
+- Lich
+- Shadow wraith
 
 ### Controls
 
@@ -79,13 +90,44 @@ L    ˩
 ## Story
 
 Game begins with dialog,
-> One last pack and we're at the boss. Is everyone ready?
+
+Tank
+> One last pack and we're at the boss. You ready Healz?
+
+> My tag's not Healz, but yeah...
 
 A DBM type ready check sounds and player presses `A` to begin the pull.
 
 This first combat is a tutorial of sorts. (Skip for POC. just boss)
 
+Next up is the boss
+> This is the first boss. Everyone remember about their AOE attack.
+ 
+SHADOW WRAITH
+> Intruders! You shall not leave this place alive!
+
+---
+
+Wizard
+> The air is thick with dark magic. Be on your guard, everyone.
+
+Barb
+> Oh great, just what we needed. More dark magic.
+
+---
+
+Wizard
+> Oh, joy. Let's head straight into the creepy voices. What could go wrong?
+
+Barb
+> Oh, joy. Let's head straight towards the creepy voices. What could go wrong?
+> Wutcdgowrng
+
+--- 
+
 Final boss is a big dragon/cat that has 2 phases and 2 attacks. Single target on tank and a cleave for everyone.
+
+> Great work everyone! Especially you Healz.
 
 ## Building AGB
 
@@ -138,6 +180,8 @@ running on the real thing.
 
 First build the binary in release mode using the instructions above, then do the following:
 
+ToDo: Works on iOs delta, but fails on PSP
+
 ```sh
-agb-gbafix target/thumbv4t-none-eabi/release/<your game> -o <your game>.gba
+agb-gbafix --debug target/thumbv4t-none-eabi/release/Healz -o healz.gba
 ```
