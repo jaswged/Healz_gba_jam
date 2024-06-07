@@ -7,7 +7,7 @@ pub static GRAPHICS: &Graphics = include_aseprite!(
     ,"gfx/boss_hp.aseprite" // boss health bar size 16x16
     ,"gfx/characters.aseprite" // Character sprites
     ,"gfx/bosses.aseprite" // Character sprites
-    // ,"gfx/banner.aseprite" // Bottom Banner
+    ,"gfx/banner.aseprite" // Bottom Banner
     ,"gfx/health.aseprite" // Bottom Banner
     ,"gfx/spell_effects.aseprite" // Spell effects
 );
