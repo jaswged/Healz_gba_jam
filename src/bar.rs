@@ -97,9 +97,7 @@ impl<'obj> Bar<'obj> {
         let mut filled = arr[0];
         let mut end = object.object_sprite(arr[5]);
 
-        println!("Before is cooldown check");
         if matches!(bar_type, BarType::Cooldown) {
-            println!("Is cooldown");
             bar_amt = 0;
             filled = arr[8];
             end = object.object_sprite(filled);
@@ -277,7 +275,6 @@ impl<'obj> Bar<'obj> {
     }
 
     pub fn reset_cooldown(&mut self) {
-        println!("Inside reset cooldown");
         self.bar_amt = 0;
         self.mid1.set_sprite(self.object.sprite(MT_SPRITE));
         self.mid2.set_sprite(self.object.sprite(MT_SPRITE));

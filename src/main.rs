@@ -197,11 +197,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 boss.cooldown_bar.gain_amount(1);
             }
 
-            if frame_counter & 10 == 0 {
-                // hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE.animation_sprite(frame_counter)));
-                // boss.cooldown_bar.gain_amount(1);
-                println!("every tenth");
-            }
+            // if frame_counter & 10 == 0 {
+            //     // hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE.animation_sprite(frame_counter)));
+            //     // boss.cooldown_bar.gain_amount(1);
+            //     println!("every tenth");
+            // }
 
             // Half a second
             if frame_counter % 30 == 0 {
@@ -220,14 +220,19 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     // Every other attack should be against the tank
                     chars[2].take_damage(4);
                 } else {
-                    // Damage a random character
-                    // gives neg numbers so cast as usize!
-                    // todo only let boss attack alive characters
-                    let chosen = rng::gen() as usize % 4;
-                    // vary the damage amount
+                    // Damage a random character and vary the damage amount
                     let dmg = rng::gen() as usize % 2;
-                    // println!("Should be 1-3 damage? {}", dmg + 1);
-                    chars[chosen].take_damage(dmg + 1);
+
+                    // only let boss attack alive characters
+                    let mut alive = Vec::new();
+                    for (i, c) in chars.iter().enumerate() {
+                        if !c.is_dead {
+                            alive.push(i);
+                        }
+                    };
+                    // gives neg numbers so cast as usize!
+                    let chosen = rng::gen() as usize % alive.len();
+                    chars[*alive.get(chosen).unwrap()].take_damage(dmg + 1);
                 }
                 tank_hit = !tank_hit;
             }
@@ -236,8 +241,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
             if aoe_timer == boss.aoe_timer {
                 // reset aoe_bar and timer
                 aoe_timer = 0;
-                for c in chars.iter_mut() {
-                    c.take_damage(7)
+                for c in &mut chars {
+                    c.take_damage(7);
                 }
                 boss.cooldown_bar.reset_cooldown();
             } else {
@@ -256,11 +261,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
             // TOdo put the spells into a if-else global_cooldown section
             // Maybe have a "Cooldown indicator" like a In center of 4 spells
             // todo create a player "class" to keep track of all user functions
-            if chars[1].is_dead {
-                println!("Cant cast spell when dead my dude!")
-                // todo show a sprite/message of tank saying, "Wipe it. Healer died again..."
-            }
-            else {
+            if !chars[1].is_dead {
                 if input.is_just_pressed(Button::A) {
                     if mana_bar.bar_amt >= 4 {
                         // todo add a cast time meter? .5 secs
@@ -299,7 +300,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         mana_bar.gain_amount(1);
                     }
                 }
-        }
+            }
+            // else {
+            //     println!("Cant cast spell when dead my dude!")
+            //     // todo show a sprite/message of tank saying, "Wipe it. Healer died again..."
+            // }
 
             // Wait for vblank, then commit the objects to the screen
             agb::display::busy_wait_for_vblank();

@@ -52,7 +52,6 @@ impl<'obj> Character<'obj> {
 
     pub fn take_damage(&mut self, damage: usize) {
         if damage >= self.health_bar.bar_amt {
-            println!("Is Dead!");
             self.health_bar.bar_amt = 0;
             self.health_bar.hide_mana_mid1();
 
