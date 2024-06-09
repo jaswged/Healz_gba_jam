@@ -91,6 +91,9 @@ L    ˩
 
 Game begins with dialog,
 
+> Don't stand in Fire!
+> Gee, thanks for the pep talk tankey.
+
 Tank
 > One last pack and we're at the boss. You ready Healz?
 
@@ -102,6 +105,7 @@ This first combat is a tutorial of sorts. (Skip for POC. just boss)
 
 Next up is the boss
 > This is the first boss. Everyone remember about their AOE attack.
+> Xulthor the Devourer
  
 SHADOW WRAITH
 > Intruders! You shall not leave this place alive!

@@ -8,16 +8,21 @@ use agb::input::{Button, ButtonController};
 include_background_gfx!(backgrounds, "000000",
         title => deduplicate "gfx/title-screen.aseprite",
         dungeon => deduplicate "gfx/dungeon.aseprite",
+        dungeon_blank => deduplicate "gfx/dungeon_blank.aseprite",
         ending => deduplicate "gfx/ending_page.aseprite");
 
-pub fn show_dungeon_screen<'obj>(vram: &mut VRamManager, tiled: &'obj Tiled0<'obj>) -> MapLoan<'obj, RegularMap> {
-    let mut bg: MapLoan<RegularMap> = tiled.background(Priority::P2,
+pub fn show_dungeon_screen<'obj>(vram: &mut VRamManager, tiled: &'obj Tiled0<'obj>, is_blank: bool) -> MapLoan<'obj, RegularMap> {
+    let mut bg: MapLoan<RegularMap> = tiled.background(Priority::P3,
                                   RegularBackgroundSize::Background32x32,
                                   TileFormat::FourBpp);
     bg.set_scroll_pos((0i16, 0));
     vram.set_background_palettes(backgrounds::PALETTES);
     bg.set_visible(false);
-    bg.fill_with(vram, &backgrounds::dungeon);
+    if is_blank {
+        bg.fill_with(vram, &backgrounds::dungeon_blank);
+    } else {
+        bg.fill_with(vram, &backgrounds::dungeon);
+    }
     bg.commit(vram);
     // sfx.frame(); = // self.mixer.frame();
 

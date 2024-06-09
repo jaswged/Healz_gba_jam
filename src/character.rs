@@ -1,6 +1,6 @@
 use crate::game_manager::GRAPHICS;
 use crate::SKULL_SPRITE_TAG;
-use agb::display::object::{OamManaged, Object, Tag};
+use agb::display::object::{OamManaged, Object, Sprite, Tag};
 use agb::println;
 use crate::bar::{BarType, Bar};
 
@@ -17,16 +17,17 @@ pub enum Profession {
 }
 
 pub struct Character<'obj> {
-    dps: i16,
+    pub dps: usize,
     profession: Profession,
-    instance: Object<'obj>,
+    pub instance: Object<'obj>,
     pub is_dead: bool,
     pub health_bar: Bar<'obj>,
     object: &'obj OamManaged<'obj>,
+    pub tag: &'obj Tag,
 }
 
 impl<'obj> Character<'obj> {
-    pub fn new(object: &'obj OamManaged<'obj>, start_x: i32, start_y: i32, profession: Profession, dps: i16) -> Self {
+    pub fn new(object: &'obj OamManaged<'obj>, start_pos: (i32, i32), profession: Profession, dps: usize) -> Self {
         let sprite_tag = match profession{
             Profession::Healer => HEALER_SPRITE_TAG,
             Profession::Wizard => WIZARD_SPRITE_TAG,
@@ -34,11 +35,10 @@ impl<'obj> Character<'obj> {
             Profession::Barb => BARB_SPRITE_TAG,
         };
         let mut instance = object.object_sprite(sprite_tag.sprite(0));
-        instance.set_position((start_x, start_y));
+        instance.set_position((start_pos.0 + 16, start_pos.1 + 16));
         instance.show();
 
-        // let health_bar = HealthBar::new(object, start_x + 4, start_y-12);
-        let health_bar = Bar::new(object, BarType::Health, start_x + 4, start_y-12);
+        let health_bar = Bar::new(object, BarType::Health, start_pos.0 + 20, start_pos.1+4);
 
         Character {
             dps,
@@ -47,6 +47,7 @@ impl<'obj> Character<'obj> {
             is_dead: false,
             health_bar,
             object,
+            tag: sprite_tag,
         }
     }
 
@@ -84,6 +85,10 @@ impl<'obj> Character<'obj> {
 
     pub fn hide(&mut self) {
         self.instance.hide();
+    }
+
+    pub fn show(&mut self) {
+        self.instance.show();
     }
 
     pub fn hide_health(&mut self) {

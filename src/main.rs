@@ -17,6 +17,7 @@
 extern crate alloc;
 
 mod background;
+mod banner;
 mod boss;
 mod boss_health_bar;
 mod character;
@@ -30,7 +31,7 @@ use alloc::vec::Vec;
 use frame::Frame;
 
 use agb::{display::object::{Graphics, Tag}, include_aseprite, println, input::Button, include_background_gfx, rng, include_font};
-use agb::display::object::{DynamicSprite, OamManaged, Object, PaletteVram, Size, Sprite};
+use agb::display::object::{ChangeColour, DynamicSprite, OamManaged, Object, PaletteVram, Size, Sprite, TextAlignment};
 use agb::{
     display::{
         tiled::{RegularBackgroundSize, TileFormat, TileSet, TileSetting, Tiled0, VRamManager},
@@ -39,9 +40,11 @@ use agb::{
     }
 };
 use agb::display::palette16::Palette16;
-use agb::display::tiled::{MapLoan, RegularMap};
+use agb::display::tiled::{MapLoan, RegularMap, TiledMap};
 use agb::fixnum::{Num, num, Vector2D};
 use agb::input::ButtonController;
+use core::fmt::Write;
+use agb::display::{HEIGHT, WIDTH};
 use crate::background::{show_dungeon_screen, show_splash_screen, tear_down_dungeon_screen, show_game_over_screen};
 use crate::bar::{BarType, Bar};
 use crate::boss::Boss;
@@ -56,9 +59,12 @@ static BTN_R_SPRITE: &Tag = GRAPHICS.tags().get("R");
 // endregion
 
 static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
-static HOURGLASS_SPRITE: &Tag = GRAPHICS.tags().get("hourglass");
+static HOURGLASS_SPRITE_TAG: &Tag = GRAPHICS.tags().get("hourglass");
+static LEAF_SPRITE_TAG: &Tag = GRAPHICS.tags().get("leaf");
+static CAUTERIZE_SPRITE_TAG: &Tag = GRAPHICS.tags().get("cauterize");
 
-static FONT: Font = include_font!("fonts/font.ttf", 10);
+static FONT: Font = include_font!("fonts/font.ttf", 8);
+static BOXY_FONT: Font = include_font!("fonts/boxy.ttf", 8);
 
 // The main function must take 1 arguments and never return. The agb::entry decorator
 // ensures that everything is in order. `agb` will call this after setting up the stack
@@ -83,18 +89,59 @@ fn game_main(mut gba: agb::Gba) -> ! {
         println!("After splash screen");
 
         // Background
-        let bg = show_dungeon_screen(&mut vram, &tiled);
+        let mut bg = show_dungeon_screen(&mut vram, &tiled, true);
 
         // Players
-        let wizard = Character::new(&object, 24, 28, Profession::Wizard, 2);
-        let healer = Character::new(&object, 24, 92, Profession::Healer, 0);
-        let tank = Character::new(&object, 96, 28, Profession::Tank, 1);
-        let barb = Character::new(&object, 96, 92, Profession::Barb, 2);
+        let chars_effects_pos = [(8, 12), (8, 76), (80, 12), (80, 76)];
+        let wizard = Character::new(&object, chars_effects_pos[0],Profession::Wizard, 1);
+        let healer = Character::new(&object, chars_effects_pos[1], Profession::Healer, 0);
+        let tank = Character::new(&object, chars_effects_pos[2], Profession::Tank, 0);
+        let barb = Character::new(&object, chars_effects_pos[3], Profession::Barb, 1);
 
         let mut chars = [wizard, healer, tank, barb];
+        // let chars_effects_pos = [(24, 28), (24, 92), (96, 28), (96, 92)]; // todo probably minus 16 from each? or invert and put above char creation with a +16
+
+        let mut dps = chars.iter().map(|c| c.dps).sum::<usize>();
+        // chars.iter_mut().for_each(Character::show);
 
         // todo Show bottom banner and initial "story" text. No spell text yet
         // dungeon.aseprite without the health bars on it for showing with text
+        println!("Show blank dungeon for dialog");
+
+        let mut renderer = BOXY_FONT.render_text((3u16, 17u16));
+
+        // Renders 2 lines at a time.
+        let strings = ["Last time this is", "the boss that wiped us.", "Healz, you better be", "on your A game!", "Is everyone ready?", ""];
+        let mut i = 0;
+
+        let vblank = agb::interrupt::VBlank::get();
+
+        loop {
+            input.update();
+
+            if input.is_just_pressed(Button::A) && i < strings.len() {
+                // renderer.write_char('8', &mut vram, 2,0);
+                let mut writer = renderer.writer(15, 0, &mut bg, &mut vram);
+                writeln!(&mut writer, "{}", strings[i]).unwrap();
+                writeln!(&mut writer, "{}", strings[i+1]).unwrap();
+                writer.commit();
+                i += 2;
+            }
+            if input.is_just_pressed(Button::B) {
+                break;
+            }
+
+            vblank.wait_for_vblank();
+            bg.commit(&mut vram);
+            renderer.clear(&mut vram);
+        } // End Dialog
+
+        println!("tear down dungeon and show one with health bars");
+        tear_down_dungeon_screen(bg, &mut vram);
+        bg = show_dungeon_screen(&mut vram, &tiled, false);
+        for c in &mut chars {
+            c.show_health();
+        }
 
         // Frame
         let mut frame = Frame::new(&object);
@@ -104,7 +151,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         // Boss
         // 280 is divisible by 35 for cooldown bar slots
-        let mut boss = Boss::new(&object, 152, 40, 280);
+        let mut boss = Boss::new(&object, 152, 48, 280);
 
         // buttons
         let mut but_a = object.object_sprite(BTN_A_SPRITE.sprite(0));
@@ -112,8 +159,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut but_l = object.object_sprite(BTN_L_SPRITE.sprite(0));
         let mut but_r = object.object_sprite(BTN_R_SPRITE.sprite(0));
 
-        let bot_bar = agb::display::HEIGHT;
-        let right_side = agb::display::WIDTH - 22; // 16 - 6
+        let bot_bar = HEIGHT;
+        let right_side = WIDTH - 22; // 16 - 6
         but_b.set_position((6, bot_bar - 16)).show();
         but_a.set_position((right_side, bot_bar - 16)).show();
         but_l.set_position((6, bot_bar - 32)).show();
@@ -123,24 +170,24 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut spell_effect = object.object_sprite(BTN_L_SPRITE.sprite(0));
         spell_effect.set_position((170, 100));//.show();
 
-        let skull_sprite_zero: &Sprite = SKULL_SPRITE_TAG.sprite(0);
-        let btna_sprite_zero: &Sprite = BTN_A_SPRITE.sprite(0);
-        let mut hourglass: Object = object.object_sprite(HOURGLASS_SPRITE.sprite(0));
-        hourglass.set_position((90, 135));
+        let mut hourglass: Object = object.object_sprite(HOURGLASS_SPRITE_TAG.sprite(0));
+        let mut hourglass_cauterize: Object = object.object_sprite(HOURGLASS_SPRITE_TAG.sprite(0));
+        hourglass.set_position((100, 135));
+        hourglass_cauterize.set_position((100, 145));
+        let mut leaf: Object = object.object_sprite(LEAF_SPRITE_TAG.sprite(0));
+        let mut caut: Object = object.object_sprite(CAUTERIZE_SPRITE_TAG.sprite(0));
 
-        // let mut left_right = 0;
-        // let mut up_down = 0;
         let mut frame_counter: usize = 0;
         let mut aoe_timer: usize = 0;
-
-        let mut skull_hidden: bool = false;
         let mut tank_hit: bool = false;
 
         // Cooldown fields
         let mut hot_target: usize = 0;
-        let mut hot: usize = 0;
+        let mut hot: i16 = -1;
+        let mut cauterize: i16 = -1;
 
         // Begin game loop here
+        println!("Begin game logic");
         loop {
             frame_counter = frame_counter.wrapping_add(1);
 
@@ -153,12 +200,12 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 // Todo create a vec with all active sprites and do one loop?
                 chars.iter_mut().for_each(Character::hide);
                 frame.hide();
+                mana_bar.hide_all();
                 boss.hide();
                 but_a.hide();
                 but_b.hide();
                 but_l.hide();
                 but_r.hide();
-                mana_bar.hide_all();
                 spell_effect.hide();
                 tear_down_dungeon_screen(bg, &mut vram);
                 agb::display::busy_wait_for_vblank();
@@ -177,12 +224,12 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 // tear_down_dungeon_background(bg, &mut vram);
                 // show_game_over_screen(&mut input, &mut vram, &tiled);
                 println!("How to proceed from here? Press button to start over");
-                
+
                 // Todo show the banner sprites again from a struct and try to text write over them
 
                 loop {
                     input.update();
-                    if input.is_just_pressed(Button::A | Button::B | Button::START | Button::SELECT)
+                    if input.is_just_pressed(Button::START | Button::SELECT )
                     {
                         println!("Button pressed");
                         break;
@@ -198,36 +245,57 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
             // Animations
             if frame_counter % 8 == 0 {
-                hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE.animation_sprite(frame_counter)));
+                hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE_TAG.animation_sprite(frame_counter)));
                 boss.cooldown_bar.gain_amount(1);
             }
 
-            if frame_counter & 10 == 0 {
+            if frame_counter % 10 == 0 {
                 // six times per second
-                // hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE.animation_sprite(frame_counter)));
-                // boss.cooldown_bar.gain_amount(1);
                 if hot > 0 {
                     chars[hot_target].take_heals(1);
                     hot = hot - 1;
                 }
             }
 
+            if frame_counter % 15 == 0 {
+                // 4 times per second
+                if cauterize > 0 {
+                    caut.set_sprite(object.sprite(CAUTERIZE_SPRITE_TAG.animation_sprite(frame_counter)));
+                    cauterize -= 1;
+
+                    if cauterize == 0 {
+                        hourglass_cauterize.hide();
+                        caut.hide();
+                        cauterize = -1;
+                    }
+                }
+            }
+
+            // Damage boss based on alive dps
+            if frame_counter % (60 / dps) == 0 {
+                // todo take damage based on which chars are alive. if only healer, no damage...
+                boss.take_damage(1);
+            }
+
+            if hot == 0 {
+                println!("Hot is over");
+                // todo play sound effect that hot is ready again
+                hourglass.hide();
+                leaf.hide();
+                hot -= 1;
+            }
+
             // Half a second
             if frame_counter % 30 == 0 {
-                if skull_hidden {
-                    spell_effect.set_sprite(object.sprite(btna_sprite_zero));
-                    // spell_effect.show();
-                } else {
-                    spell_effect.set_sprite(object.sprite(skull_sprite_zero));
-                    // spell_effect.hide();
+                // Regain a point of mana from spirit/manar
+                if !chars[1].is_dead {
+                mana_bar.gain_amount(1);
                 }
-                skull_hidden = !skull_hidden;
-                boss.take_damage(1);
 
                 // Damage the players
                 if tank_hit && !chars[2].is_dead {
                     // Every other attack should be against the tank
-                    chars[2].take_damage(4);
+                    chars[2].take_damage(3);
                 } else {
                     // Damage a random character and vary the damage amount
                     let dmg = rng::gen() as usize % 2;
@@ -272,36 +340,48 @@ fn game_main(mut gba: agb::Gba) -> ! {
             // todo create a player "class" to keep track of all user functions
             if !chars[1].is_dead {
                 if input.is_just_pressed(Button::A) {
-                    if mana_bar.bar_amt >= 4 {
+                    if mana_bar.bar_amt >= 2 {
                         // todo add a cast time meter? .5 secs
                         println!("A pressed. Cast Bandage!");
                         chars[frame.selected_char].take_heals(4);
-                        mana_bar.lose_amount(4);
+                        mana_bar.lose_amount(2);
                     } else { println!("Out of manna bruv"); }
                 } else if input.is_just_pressed(Button::B) {
-                    if mana_bar.bar_amt >= 7 {
+                    // Cast Cauterize
+                    if mana_bar.bar_amt >= 5 && cauterize <= 0 {
                         println!("B pressed Cast Cauterize!");
                         // start timer for how long spell lasts or cooldown
                         chars[frame.selected_char].take_heals(8);
-                        mana_bar.lose_amount(7);
+                        mana_bar.lose_amount(5);
                         // todo begin ability cooldown.
                         // show hourglass. todo hide when cooldown is over
-                        hourglass.show();
+                        cauterize = 4;
+                        hourglass_cauterize.set_position(chars_effects_pos[frame.selected_char]);
+                        hourglass_cauterize.show();
                     } else { println!("Out of manna bruv"); }
                 } else if input.is_just_pressed(Button::L) {
-                    if mana_bar.bar_amt >= 4 && hot == 0 {
+                    if mana_bar.bar_amt >= 4 && hot <= 0 {
                         println!("Cast Regenerate HOT!");
                         mana_bar.lose_amount(4);
                         hot_target = frame.selected_char;
                         hot = 30;
                         // Show hour glass cooldown, spawn sprite effect over chosen char and decrement
+                        hourglass.show();
+                        leaf.set_position(chars_effects_pos[hot_target]);
+                        leaf.show();
                     }
-                } else if input.is_pressed(Button::R) {
+                };
+
+                if input.is_pressed(Button::R) {
                     // Trigger R is pressed. Hold to charge mana
                     // todo move this % check above to an above section to avoid duplicate checks
                     if frame_counter % 8 == 0 {
                         mana_bar.gain_amount(1);
                     }
+                    // todo show meditation sprite
+                } else {
+                    // set sprite back to normal
+                    chars[1].instance.set_sprite(object.sprite(chars[1].tag.sprite(0)));
                 }
             }
             // else {
