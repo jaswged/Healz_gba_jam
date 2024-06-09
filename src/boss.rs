@@ -1,11 +1,8 @@
 use crate::boss_health_bar::BossHealthBar;
-use crate::game_manager::GRAPHICS;
 use agb::display::object::{OamManaged, Object, Tag};
 use agb::println;
 use crate::bar::{BarType, Bar};
 use crate::SKULL_SPRITE_TAG;
-
-static BOSS_SPRITE: &Tag = GRAPHICS.tags().get("boss");
 
 pub struct Boss<'obj>{
     // aoe_timer should be easily divisible by 35 for the aeo bar
@@ -19,8 +16,8 @@ pub struct Boss<'obj>{
 }
 
 impl<'obj> Boss<'obj> {
-    pub fn new(object: &'obj OamManaged<'obj>, start_x: i32, start_y: i32, aoe_timer: usize) -> Self {
-        let mut instance = object.object_sprite(BOSS_SPRITE.sprite(0));
+    pub fn new(object: &'obj OamManaged<'obj>, tag: &'obj Tag, start_x: i32, start_y: i32, aoe_timer: usize) -> Self {
+        let mut instance = object.object_sprite(tag.sprite(0));
         instance.set_position((start_x, start_y));
         instance.show();
 

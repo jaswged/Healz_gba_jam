@@ -14,9 +14,9 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 - [x] Game over screen
 - [x] Mana bar and boss AOE cooldown
 - [ ] Text writer for player dialog or story
-- [ ] Cooldowns for spells and boss abilities
-- [ ] UI Text for spells and names
-- [ ] Spell effects
+- [x] Cooldowns for spells and boss abilities
+- [x] UI Text for spells and names
+- [x] Spell effects
 - [ ] Character animations for abilities
 - [ ] Sound effects and music
 - [ ] ...
@@ -27,6 +27,7 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 - [ ] Big bad boss guy
 - [ ] Figure out how to do text. is it all char sprites or some tool
 - [ ] Spell effects
+- [ ] Multiple bosses
 - [ ] ...
 
 ### Nice To Haves
@@ -129,7 +130,7 @@ Barb
 
 --- 
 
-Final boss is a big dragon/cat that has 2 phases and 2 attacks. Single target on tank and a cleave for everyone.
+Final boss is a big dragon/lich that has 2 phases and 2 attacks. Single target on tank and a cleave for everyone.
 
 > Great work everyone! Especially you Healz.
 

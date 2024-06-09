@@ -12,7 +12,7 @@ include_background_gfx!(backgrounds, "000000",
         ending => deduplicate "gfx/ending_page.aseprite");
 
 pub fn show_dungeon_screen<'obj>(vram: &mut VRamManager, tiled: &'obj Tiled0<'obj>, is_blank: bool) -> MapLoan<'obj, RegularMap> {
-    let mut bg: MapLoan<RegularMap> = tiled.background(Priority::P3,
+    let mut bg: MapLoan<RegularMap> = tiled.background(Priority::P2,
                                   RegularBackgroundSize::Background32x32,
                                   TileFormat::FourBpp);
     bg.set_scroll_pos((0i16, 0));
@@ -30,7 +30,7 @@ pub fn show_dungeon_screen<'obj>(vram: &mut VRamManager, tiled: &'obj Tiled0<'ob
     bg
 }
 
-pub fn tear_down_dungeon_screen(mut bg: MapLoan<RegularMap>, vram: &mut VRamManager) {
+pub fn tear_down_dungeon_screen(mut bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager) {
     bg.set_visible(false);
     bg.clear(vram);
     bg.commit(vram);

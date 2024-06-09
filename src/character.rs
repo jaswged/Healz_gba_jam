@@ -1,7 +1,6 @@
 use crate::game_manager::GRAPHICS;
 use crate::SKULL_SPRITE_TAG;
-use agb::display::object::{OamManaged, Object, Sprite, Tag};
-use agb::println;
+use agb::display::object::{OamManaged, Object, Tag};
 use crate::bar::{BarType, Bar};
 
 static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer");
