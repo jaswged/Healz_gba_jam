@@ -62,6 +62,7 @@ static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
 static HOURGLASS_SPRITE_TAG: &Tag = GRAPHICS.tags().get("hourglass");
 static LEAF_SPRITE_TAG: &Tag = GRAPHICS.tags().get("leaf");
 static CAUTERIZE_SPRITE_TAG: &Tag = GRAPHICS.tags().get("cauterize");
+static LIGHT_FLASH_SPRITE_TAG: &Tag = GRAPHICS.tags().get("light_flash");
 
 static FONT: Font = include_font!("fonts/font.ttf", 8);
 static BOXY_FONT: Font = include_font!("fonts/boxy.ttf", 8);
@@ -172,10 +173,13 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         let mut hourglass: Object = object.object_sprite(HOURGLASS_SPRITE_TAG.sprite(0));
         let mut hourglass_cauterize: Object = object.object_sprite(HOURGLASS_SPRITE_TAG.sprite(0));
-        hourglass.set_position((100, 135));
+        let mut light_flash: Object = object.object_sprite(LIGHT_FLASH_SPRITE_TAG.sprite(0));
+
+        hourglass.set_position((100, 115));
         hourglass_cauterize.set_position((100, 145));
         let mut leaf: Object = object.object_sprite(LEAF_SPRITE_TAG.sprite(0));
         let mut caut: Object = object.object_sprite(CAUTERIZE_SPRITE_TAG.sprite(0));
+        let mut flash_obj: Object = object.object_sprite(LIGHT_FLASH_SPRITE_TAG.sprite(0));
 
         let mut frame_counter: usize = 0;
         let mut aoe_timer: usize = 0;
@@ -185,6 +189,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut hot_target: usize = 0;
         let mut hot: i16 = -1;
         let mut cauterize: i16 = -1;
+        let mut flash: i16 = -1;
 
         // Begin game loop here
         println!("Begin game logic");
@@ -255,6 +260,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     chars[hot_target].take_heals(1);
                     hot = hot - 1;
                 }
+
+                if flash > 0 {
+                    flash_obj.set_sprite(object.sprite(LIGHT_FLASH_SPRITE_TAG.animation_sprite(frame_counter)));
+                    flash -= 1;
+                }
             }
 
             if frame_counter % 15 == 0 {
@@ -283,6 +293,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 hourglass.hide();
                 leaf.hide();
                 hot -= 1;
+            }
+
+            if flash == 0 {
+                flash_obj.hide();
+                flash -= 1;
             }
 
             // Half a second
@@ -340,26 +355,30 @@ fn game_main(mut gba: agb::Gba) -> ! {
             // todo create a player "class" to keep track of all user functions
             if !chars[1].is_dead {
                 if input.is_just_pressed(Button::A) {
+                    // Cast Bandage
                     if mana_bar.bar_amt >= 2 {
                         // todo add a cast time meter? .5 secs
-                        println!("A pressed. Cast Bandage!");
                         chars[frame.selected_char].take_heals(4);
                         mana_bar.lose_amount(2);
+                        flash = 3;
+                        flash_obj.set_position(chars_effects_pos[frame.selected_char]);
+                        flash_obj.show();
                     } else { println!("Out of manna bruv"); }
                 } else if input.is_just_pressed(Button::B) {
                     // Cast Cauterize
                     if mana_bar.bar_amt >= 5 && cauterize <= 0 {
-                        println!("B pressed Cast Cauterize!");
                         // start timer for how long spell lasts or cooldown
                         chars[frame.selected_char].take_heals(8);
                         mana_bar.lose_amount(5);
                         // todo begin ability cooldown.
                         // show hourglass. todo hide when cooldown is over
                         cauterize = 4;
-                        hourglass_cauterize.set_position(chars_effects_pos[frame.selected_char]);
+                        caut.set_position(chars_effects_pos[frame.selected_char]);
+                        caut.show();
                         hourglass_cauterize.show();
                     } else { println!("Out of manna bruv"); }
                 } else if input.is_just_pressed(Button::L) {
+                    // Cast Regenerate
                     if mana_bar.bar_amt >= 4 && hot <= 0 {
                         println!("Cast Regenerate HOT!");
                         mana_bar.lose_amount(4);
