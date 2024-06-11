@@ -7,10 +7,10 @@ use agb::sound::mixer::{ChannelId, Mixer, SoundChannel};
 static BATTLE_A: &[u8] = include_wav!("music/battleA.wav");
 static BOSS_BATTLE_1: &[u8] = include_wav!("music/boss_battle_1.wav");
 static FANTASY_2: &[u8] = include_wav!("music/fantasy_2.wav");
-static BOSS_BATTLE_2: &[u8] = include_wav!("music/boss_battle_2.wav");
-static BOSS_BATTLE_3: &[u8] = include_wav!("music/boss_battle_3.wav"); // TItle
-static BOSS_BATTLE_4: &[u8] = include_wav!("music/boss_battle_4.wav");
-static FANTASY_1: &[u8] = include_wav!("music/fantasy_1.wav");
+// static BOSS_BATTLE_2: &[u8] = include_wav!("music/boss_battle_2.wav");
+// static BOSS_BATTLE_3: &[u8] = include_wav!("music/boss_battle_3.wav"); // TItle
+// static BOSS_BATTLE_4: &[u8] = include_wav!("music/boss_battle_4.wav");
+// static FANTASY_1: &[u8] = include_wav!("music/fantasy_1.wav");
 
 static DEATH_1: &[u8] = include_wav!("sfx/death_1.wav");
 static SWORD_1: &[u8] = include_wav!("sfx/sword_hit_1.wav");

@@ -102,8 +102,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
         sfx.title_screen();
         show_splash_screen(&mut input, &mut vram, &tiled, &mut sfx);
 
-        println!("After splash screen");
-
         // Background
         let mut blank_bg = show_dungeon_screen(&mut vram, &tiled, true);
 
@@ -251,8 +249,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 if boss.is_dead {
                     println!("You win bruv. Good Going. Go get your Lewt!");
                     // todo boss fight over hide spell effects?
-
-                    println!("gameover loop you Won");
                     // tear_down_dungeon_background(bg, &mut vram);
 
                     // Todo show the banner sprites again from a struct and try to text write over them
@@ -270,8 +266,17 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     }
 
                     // todo heal up and rez characters and change background for next room
+                    println!("Heal up before next fight");
+                    for c in &mut chars {
+                        c.full_heal();
+                    }
+                    println!("Fill mana");
+                    mana_bar.fill_bar();
+                    agb::display::busy_wait_for_vblank();
+                    object.commit();
+
                     // tear_down_dungeon_screen(&mut bg, &mut vram);
-                    break; // returns you to the title screen
+                    break; // Sends you to the next boss
                 }
                 // endregion
 

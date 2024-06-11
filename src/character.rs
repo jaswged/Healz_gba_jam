@@ -1,6 +1,6 @@
 use crate::game_manager::GRAPHICS;
 use crate::SKULL_SPRITE_TAG;
-use agb::display::object::{OamManaged, Object, Tag};
+use agb::{display::object::{OamManaged, Object, Tag}, println};
 use crate::bar::{BarType, Bar};
 
 static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer");
@@ -98,5 +98,10 @@ impl<'obj> Character<'obj> {
     pub fn show_health(&mut self) {
         // show health later after creating the char so you can show dialog stuff
         self.health_bar.show_all();
+    }
+
+    pub fn full_heal(&mut self) {
+        println!("Full heal");
+        self.health_bar.fill_bar();
     }
 }
