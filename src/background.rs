@@ -4,6 +4,7 @@ use agb::display::tiled::{
 use agb::display::Priority;
 use agb::include_background_gfx;
 use agb::input::{Button, ButtonController};
+use crate::sfx::Sfx;
 
 include_background_gfx!(backgrounds, "000000",
         title => deduplicate "gfx/title-screen.aseprite",
@@ -36,7 +37,7 @@ pub fn tear_down_dungeon_screen(mut bg: &mut MapLoan<RegularMap>, vram: &mut VRa
     bg.commit(vram);
 }
 
-pub fn show_splash_screen(input: &mut ButtonController, vram: &mut VRamManager, tiled: &Tiled0) {
+pub fn show_splash_screen(input: &mut ButtonController, vram: &mut VRamManager, tiled: &Tiled0, sfx: &mut Sfx) {
     let mut background: MapLoan<RegularMap> = tiled.background(
         Priority::P1,
         RegularBackgroundSize::Background32x32,
@@ -56,6 +57,7 @@ pub fn show_splash_screen(input: &mut ButtonController, vram: &mut VRamManager, 
 
     loop {
         input.update();
+        sfx.frame();
         if input.is_just_pressed(Button::A | Button::B | Button::START | Button::SELECT) {
             // todo add a help background page if Select/B is picked
             break;
@@ -67,7 +69,7 @@ pub fn show_splash_screen(input: &mut ButtonController, vram: &mut VRamManager, 
     background.commit(vram);
 }
 
-pub fn show_game_over_screen(input: &mut ButtonController, vram: &mut VRamManager, tiled: &Tiled0) {
+pub fn show_game_over_screen(input: &mut ButtonController, vram: &mut VRamManager, tiled: &Tiled0, sfx: &mut Sfx,) {
     let mut ending_bg = tiled.background(
         Priority::P1,
         RegularBackgroundSize::Background32x32,
@@ -82,6 +84,7 @@ pub fn show_game_over_screen(input: &mut ButtonController, vram: &mut VRamManage
 
     loop {
         input.update();
+        sfx.frame();
         if input.is_just_pressed(Button::A | Button::B | Button::START | Button::SELECT) {
             break;
         }

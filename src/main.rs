@@ -45,10 +45,12 @@ use agb::fixnum::{Num, num, Vector2D};
 use agb::input::ButtonController;
 use core::fmt::Write;
 use agb::display::{HEIGHT, WIDTH};
+use agb::sound::mixer::Frequency;
 use crate::background::{show_dungeon_screen, show_splash_screen, tear_down_dungeon_screen, show_game_over_screen};
 use crate::bar::{BarType, Bar};
 use crate::boss::Boss;
 use crate::character::{Character, Profession};
+use crate::sfx::Sfx;
 
 // We define some easy ways of referencing the sprites
 // region Todo group buttons into own file
@@ -88,8 +90,17 @@ fn game_main(mut gba: agb::Gba) -> ! {
         // Create a button controller. only allows for reading
         let (tiled, mut vram) = gba.display.video.tiled0();
 
+        // Sounds
+        let mut mixer = gba.mixer.mixer(Frequency::Hz32768);
+        // let mut mixer = gba.mixer.mixer(Frequency::Hz18157);
+        // let mut mixer = gba.mixer.mixer(Frequency::Hz10512);
+        mixer.enable();
+
+        let mut sfx = Sfx::new(&mut mixer);
+
         // Show title page. press to continue
-        show_splash_screen(&mut input, &mut vram, &tiled);
+        sfx.title_screen();
+        show_splash_screen(&mut input, &mut vram, &tiled, &mut sfx);
 
         println!("After splash screen");
 
@@ -124,6 +135,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         loop {
             input.update();
+            sfx.frame();
 
             if input.is_just_pressed(Button::A) && i < strings.len() {
                 // renderer.write_char('8', &mut vram, 2,0);
@@ -132,6 +144,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 writeln!(&mut writer, "{}", strings[i+1]).unwrap();
                 writer.commit();
                 i += 2;
+
+                sfx.text_speed();
             }
             if input.is_just_pressed(Button::START) {
                 break;
@@ -190,10 +204,14 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         let mut sprite_ind = 0;
         let boss_tags = [BOSS_SHIELD_TAG, BOSS_CRAB_TAG, BOSS_WIZARD_TAG];
+        sfx.boss();
 
         'game_loop: loop {
             // Boss
             // 280 is divisible by 35 for cooldown bar slots
+            if sprite_ind >= boss_tags.len() {
+                break;
+            }
             let mut boss = Boss::new(&object, boss_tags[sprite_ind], 152, 48, 280);
             sprite_ind += 1;
 
@@ -201,6 +219,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
             println!("Begin game logic");
             loop {
                 frame_counter = frame_counter.wrapping_add(1);
+                sfx.frame();
 
                 // region Game over checks
                 // Game Over All characters dead
@@ -224,7 +243,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     agb::display::busy_wait_for_vblank();
                     object.commit();
 
-                    show_game_over_screen(&mut input, &mut vram, &tiled);
+                    show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
 
                     break 'game_loop; // returns you to the title screen
                 };
@@ -241,6 +260,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
                     loop {
                         input.update();
+                        sfx.frame();
+
                         if input.is_just_pressed(Button::START | Button::SELECT)
                         {
                             break;
@@ -370,7 +391,10 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             flash = 3;
                             flash_obj.set_position(chars_effects_pos[frame.selected_char]);
                             flash_obj.show();
-                        } else { println!("Out of manna bruv"); }
+                        } else {
+                            println!("Out of manna bruv or too soon");
+                            sfx.player_oom();
+                        }
                     } else if input.is_just_pressed(Button::B) {
                         // Cast Cauterize
                         if mana_bar.bar_amt >= 5 && cauterize <= 0 {
@@ -383,7 +407,10 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             caut.set_position(chars_effects_pos[frame.selected_char]);
                             caut.show();
                             hourglass_cauterize.show();
-                        } else { println!("Out of manna bruv"); }
+                        } else {
+                            println!("Out of manna bruv or too soon");
+                            sfx.player_oom();
+                        }
                     } else if input.is_just_pressed(Button::L) {
                         // Cast Regenerate
                         if mana_bar.bar_amt >= 4 && hot <= 0 {
@@ -395,6 +422,10 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             hourglass.show();
                             leaf.set_position(chars_effects_pos[hot_target]);
                             leaf.show();
+                        }
+                        else {
+                            println!("Out of manna bruv or too soon");
+                            sfx.player_oom();
                         }
                     };
 
@@ -424,5 +455,9 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 input.update();
             }
         }
+
+        // todo Proper game over screen when all bosses bested.
+        // "See you guys again next week for heroics"
+        show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
     }
 }
