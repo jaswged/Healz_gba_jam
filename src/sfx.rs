@@ -3,11 +3,12 @@ use agb::fixnum::num;
 use agb::rng;
 use agb::sound::mixer::{ChannelId, Mixer, SoundChannel};
 
-
+// Music
 static BATTLE_A: &[u8] = include_wav!("music/battle.wav");
 static BOSS_BATTLE_1: &[u8] = include_wav!("music/boss_battle_1.wav");
 static FANTASY_2: &[u8] = include_wav!("music/fantasy_2.wav");
 
+// Sound Effects
 static DEATH_1: &[u8] = include_wav!("sfx/death_1.wav");
 static SWORD_1: &[u8] = include_wav!("sfx/sword_hit_1.wav");
 static OOM: &[u8] = include_wav!("sfx/oom.wav");
@@ -16,6 +17,7 @@ static FIRE_HIT: &[u8] = include_wav!("sfx/Fire_Hit_01.wav");
 static TEXT: &[u8] = include_wav!("sfx/text_fast.wav");
 static GAME_OVER: &[u8] = include_wav!("sfx/game_over.wav");
 static BOOK: &[u8] = include_wav!("sfx/book.wav");
+static MAGIC_HIT: &[u8] = include_wav!("sfx/Magic_Hit_Multiple.wav");
 
 
 pub struct Sfx<'a> {
@@ -86,6 +88,10 @@ impl<'a> Sfx<'a> {
     }
 
     pub fn hot_ready(&mut self) {
+        self.mixer.play_sound(SoundChannel::new(READY));
+    }
+
+    pub fn cauterize_ready(&mut self) {
         self.mixer.play_sound(SoundChannel::new(READY));
     }
 
