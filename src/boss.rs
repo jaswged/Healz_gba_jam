@@ -2,10 +2,23 @@ use crate::boss_health_bar::BossHealthBar;
 use agb::display::object::{OamManaged, Object, Tag};
 use agb::println;
 use crate::bar::{BarType, Bar};
-use crate::SKULL_SPRITE_TAG;
+use crate::CHEST_SPRITE_TAG;
+use crate::game_manager::GRAPHICS;
+
+static SHIELD_TAG: &Tag = GRAPHICS.tags().get("boss_shield");
+static CRAB_TAG: &Tag = GRAPHICS.tags().get("boss_crab");
+static WIZARD_TAG: &Tag = GRAPHICS.tags().get("boss_wizard");
+
+#[derive(Clone)]
+pub enum BossType{
+    Shield,
+    Crab,
+    Wizard,
+}
 
 pub struct Boss<'obj>{
     // aoe_timer should be easily divisible by 35 for the aeo bar
+    boss_type: BossType,
     dps: i16,
     instance: Object<'obj>,
     pub is_dead: bool,
@@ -16,7 +29,12 @@ pub struct Boss<'obj>{
 }
 
 impl<'obj> Boss<'obj> {
-    pub fn new(object: &'obj OamManaged<'obj>, tag: &'obj Tag, start_x: i32, start_y: i32, aoe_timer: usize) -> Self {
+    pub fn new(object: &'obj OamManaged<'obj>, boss_type: BossType, start_x: i32, start_y: i32, aoe_timer: usize) -> Self {
+        let tag = match boss_type {
+            BossType::Shield => { SHIELD_TAG }
+            BossType::Crab => { CRAB_TAG }
+            BossType::Wizard => { WIZARD_TAG }
+        };
         let mut instance = object.object_sprite(tag.sprite(0));
         instance.set_position((start_x, start_y));
         instance.show();
@@ -25,6 +43,7 @@ impl<'obj> Boss<'obj> {
         let cooldown_bar = Bar::new(&object, BarType::Cooldown, 188, 30);
 
         Boss {
+            boss_type,
             dps: 3,
             instance,
             is_dead: false,
@@ -42,7 +61,8 @@ impl<'obj> Boss<'obj> {
             self.health_bar.health_amt = 0;
             self.health_bar.hide_mid1();
             self.is_dead = true;
-            self.instance.set_sprite(self.object.sprite(SKULL_SPRITE_TAG.sprite(0)));
+            self.instance.set_sprite(self.object.sprite(CHEST_SPRITE_TAG.sprite(0)));
+            self.instance.set_position((175, 70));
             return;
         }
         let new_health = self.health_bar.health_amt - damage;

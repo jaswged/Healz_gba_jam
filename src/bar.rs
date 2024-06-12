@@ -70,8 +70,9 @@ static CD_SPRITE_ARR: [&Sprite; 9] = [
 pub enum BarType{
     Health,
     Mana,
-    Cooldown
+    Cooldown,
 }
+
 pub struct Bar<'obj> {
     bar_type: BarType,
     pub bar_amt: usize,
@@ -284,7 +285,6 @@ impl<'obj> Bar<'obj> {
     }
 
     pub fn fill_bar(&mut self) {
-        println!("FIll bar called");
         self.bar_amt = self.bar_max;
         let arr = match self.bar_type {
             BarType::Mana => {MN_SPRITE_ARR}
@@ -297,5 +297,7 @@ impl<'obj> Bar<'obj> {
         self.mid3.set_sprite(self.object.sprite(arr[0]));
         self.mid4.set_sprite(self.object.sprite(arr[0]));
         self.end.set_sprite(self.object.sprite(arr[5]));
+
+        self.show_all();
     }
 }

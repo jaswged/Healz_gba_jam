@@ -49,6 +49,7 @@ use agb::sound::mixer::Frequency;
 use crate::background::{show_dungeon_screen, show_splash_screen, tear_down_dungeon_screen, show_game_over_screen};
 use crate::bar::{BarType, Bar};
 use crate::boss::Boss;
+use crate::boss::BossType::{Crab, Shield, Wizard};
 use crate::character::{Character, Profession};
 use crate::sfx::Sfx;
 
@@ -61,14 +62,11 @@ static BTN_R_SPRITE: &Tag = GRAPHICS.tags().get("R");
 // endregion
 
 static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
+static CHEST_SPRITE_TAG: &Tag = GRAPHICS.tags().get("chest");
 static HOURGLASS_SPRITE_TAG: &Tag = GRAPHICS.tags().get("hourglass");
 static LEAF_SPRITE_TAG: &Tag = GRAPHICS.tags().get("leaf");
 static CAUTERIZE_SPRITE_TAG: &Tag = GRAPHICS.tags().get("cauterize");
 static LIGHT_FLASH_SPRITE_TAG: &Tag = GRAPHICS.tags().get("light_flash");
-
-static BOSS_SHIELD_TAG: &Tag = GRAPHICS.tags().get("boss_shield");
-static BOSS_CRAB_TAG: &Tag = GRAPHICS.tags().get("boss_crab");
-static BOSS_WIZARD_TAG: &Tag = GRAPHICS.tags().get("boss_wizard");
 
 static FONT: Font = include_font!("fonts/font.ttf", 8);
 static BOXY_FONT: Font = include_font!("fonts/boxy.ttf", 8);
@@ -91,15 +89,15 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let (tiled, mut vram) = gba.display.video.tiled0();
 
         // Sounds
-        let mut mixer = gba.mixer.mixer(Frequency::Hz32768);
-        // let mut mixer = gba.mixer.mixer(Frequency::Hz18157);
+        // let mut mixer = gba.mixer.mixer(Frequency::Hz32768);
+        let mut mixer = gba.mixer.mixer(Frequency::Hz18157);
         // let mut mixer = gba.mixer.mixer(Frequency::Hz10512);
         mixer.enable();
 
         let mut sfx = Sfx::new(&mut mixer);
 
         // Show title page. press to continue
-        sfx.title_screen();
+        // sfx.title_screen();
         show_splash_screen(&mut input, &mut vram, &tiled, &mut sfx);
 
         // Background
@@ -113,7 +111,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let barb = Character::new(&object, chars_effects_pos[3], Profession::Barb, 1);
 
         let mut chars = [wizard, healer, tank, barb];
-        // let chars_effects_pos = [(24, 28), (24, 92), (96, 28), (96, 92)]; // todo probably minus 16 from each? or invert and put above char creation with a +16
 
         let mut dps = chars.iter().map(|c| c.dps).sum::<usize>();
         // chars.iter_mut().for_each(Character::show);
@@ -130,10 +127,20 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut i = 0;
 
         let vblank = agb::interrupt::VBlank::get();
+        let mut frame_counter: usize = 0;
 
         loop {
             input.update();
             sfx.frame();
+
+            // Show idle chars during dialog
+            frame_counter = frame_counter.wrapping_add(1);
+
+            if frame_counter % 10 == 0 {
+                for c in &mut chars {
+                    c.update_idle_animation(frame_counter);
+                }
+            }
 
             if input.is_just_pressed(Button::A) && i < strings.len() {
                 // renderer.write_char('8', &mut vram, 2,0);
@@ -190,7 +197,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut caut: Object = object.object_sprite(CAUTERIZE_SPRITE_TAG.sprite(0));
         let mut flash_obj: Object = object.object_sprite(LIGHT_FLASH_SPRITE_TAG.sprite(0));
 
-        let mut frame_counter: usize = 0;
         let mut aoe_timer: usize = 0;
         let mut tank_hit: bool = false;
 
@@ -200,18 +206,19 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut cauterize: i16 = -1;
         let mut flash: i16 = -1;
 
-        let mut sprite_ind = 0;
-        let boss_tags = [BOSS_SHIELD_TAG, BOSS_CRAB_TAG, BOSS_WIZARD_TAG];
+        let mut boss_ind = 0;
+        let boss_types = [Shield, Crab, Wizard];
         sfx.boss();
 
+        /************************** Main Game Loop **************************/
         'game_loop: loop {
             // Boss
             // 280 is divisible by 35 for cooldown bar slots
-            if sprite_ind >= boss_tags.len() {
+            if boss_ind >= boss_types.len() {
                 break;
             }
-            let mut boss = Boss::new(&object, boss_tags[sprite_ind], 152, 48, 280);
-            sprite_ind += 1;
+            let mut boss = Boss::new(&object, boss_types[boss_ind].clone(), 152, 48, 280);
+            boss_ind += 1;
 
             // Begin game loop here
             println!("Begin game logic");
@@ -221,6 +228,17 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
                 // region Game over checks
                 // Game Over All characters dead
+                for (i, c) in &mut chars.iter_mut().enumerate() {
+                    if c.just_died {
+                        sfx.player_died();
+                        dps -= c.dps;
+                        println!("Char died. THeir dps: {}. New toal: {}", c.dps, dps);
+                        c.just_died = false;
+                        println!("Char died at {}. Removing", i);
+                        // *alive.remove(i);
+                    }
+                }
+
                 if chars.iter().all(|c| c.is_dead) {
                     println!("You lose!");
 
@@ -244,11 +262,16 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
 
                     break 'game_loop; // returns you to the title screen
-                };
+                }
 
                 if boss.is_dead {
                     println!("You win bruv. Good Going. Go get your Lewt!");
                     // todo boss fight over hide spell effects?
+                    leaf.hide();
+                    caut.hide();
+                    flash_obj.hide();
+                    hourglass.hide();
+                    hourglass_cauterize.hide();
                     // tear_down_dungeon_background(bg, &mut vram);
 
                     // Todo show the banner sprites again from a struct and try to text write over them
@@ -257,21 +280,29 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     loop {
                         input.update();
                         sfx.frame();
+                        frame_counter = frame_counter.wrapping_add(1);
 
                         if input.is_just_pressed(Button::START | Button::SELECT)
                         {
                             break;
                         }
+
+                        if frame_counter % 10 == 0 {
+                            for c in &mut chars {
+                                c.update_idle_animation(frame_counter);
+                            }
+                        }
+
                         agb::display::busy_wait_for_vblank();
+                        object.commit();
                     }
 
                     // todo heal up and rez characters and change background for next room
-                    println!("Heal up before next fight");
                     for c in &mut chars {
-                        c.full_heal();
+                        c.revive();
                     }
-                    println!("Fill mana");
                     mana_bar.fill_bar();
+
                     agb::display::busy_wait_for_vblank();
                     object.commit();
 
@@ -302,6 +333,9 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
                 if frame_counter % 15 == 0 {
                     // 4 times per second
+                    // update char animations
+                    Character::update_animations(&mut chars, frame_counter);
+
                     if cauterize > 0 {
                         caut.set_sprite(object.sprite(CAUTERIZE_SPRITE_TAG.animation_sprite(frame_counter)));
                         cauterize -= 1;
@@ -315,7 +349,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 }
 
                 // Damage boss based on alive dps
-                if frame_counter % (60 / dps) == 0 {
+                if dps != 0 && frame_counter % (60 / dps) == 0 {
                     // todo take damage based on which chars are alive. if only healer, no damage...
                     boss.take_damage(1);
                 }
@@ -323,6 +357,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 if hot == 0 {
                     println!("Hot is over");
                     // todo play sound effect that hot is ready again
+                    sfx.hot_ready();
                     hourglass.hide();
                     leaf.hide();
                     hot -= 1;
@@ -383,13 +418,23 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     frame.set_position(left_right, up_down);
                 }
 
-                // Todo put the spells into a if-else global_cooldown section
                 // Maybe have a "Cooldown indicator" like a In center of 4 spells
                 // todo create a player "class" to keep track of all user functions
                 if !chars[1].is_dead {
-                    if input.is_just_pressed(Button::A) {
+                    if input.is_pressed(Button::R) {
+                        // Trigger R is pressed. Hold to charge mana
+                        // todo move this % check above to an above section to avoid duplicate checks
+                        if frame_counter % 8 == 0 {
+                            mana_bar.gain_amount(1);
+                        }
+                        // show meditation sprite
+                        chars[1].start_meditating();
+                    } else if input.is_just_released(Button::R) {
+                        // set sprite back to normal
+                        chars[1].stop_meditating();
+                    } else if input.is_just_pressed(Button::A) {
                         // Cast Bandage
-                        if mana_bar.bar_amt >= 2 {
+                        if mana_bar.bar_amt >= 2 && !chars[frame.selected_char].is_dead {
                             // todo add a cast time meter? .5 secs
                             chars[frame.selected_char].take_heals(4);
                             mana_bar.lose_amount(2);
@@ -402,7 +447,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         }
                     } else if input.is_just_pressed(Button::B) {
                         // Cast Cauterize
-                        if mana_bar.bar_amt >= 5 && cauterize <= 0 {
+                        if mana_bar.bar_amt >= 5 && cauterize <= 0 && !chars[frame.selected_char].is_dead {
                             // start timer for how long spell lasts or cooldown
                             chars[frame.selected_char].take_heals(8);
                             mana_bar.lose_amount(5);
@@ -418,7 +463,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         }
                     } else if input.is_just_pressed(Button::L) {
                         // Cast Regenerate
-                        if mana_bar.bar_amt >= 4 && hot <= 0 {
+                        if mana_bar.bar_amt >= 4 && hot <= 0  && !chars[frame.selected_char].is_dead {
                             println!("Cast Regenerate HOT!");
                             mana_bar.lose_amount(4);
                             hot_target = frame.selected_char;
@@ -433,18 +478,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             sfx.player_oom();
                         }
                     };
-
-                    if input.is_pressed(Button::R) {
-                        // Trigger R is pressed. Hold to charge mana
-                        // todo move this % check above to an above section to avoid duplicate checks
-                        if frame_counter % 8 == 0 {
-                            mana_bar.gain_amount(1);
-                        }
-                        // todo show meditation sprite
-                    } else {
-                        // set sprite back to normal
-                        chars[1].instance.set_sprite(object.sprite(chars[1].tag.sprite(0)));
-                    }
                 }
                 // else {
                 //     println!("Cant cast spell when dead my dude!")

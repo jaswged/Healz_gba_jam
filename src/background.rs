@@ -69,7 +69,7 @@ pub fn show_splash_screen(input: &mut ButtonController, vram: &mut VRamManager, 
     background.commit(vram);
 }
 
-pub fn show_game_over_screen(input: &mut ButtonController, vram: &mut VRamManager, tiled: &Tiled0, sfx: &mut Sfx,) {
+pub fn show_game_over_screen(input: &mut ButtonController, vram: &mut VRamManager, tiled: &Tiled0, sfx: &mut Sfx) {
     let mut ending_bg = tiled.background(
         Priority::P1,
         RegularBackgroundSize::Background32x32,
