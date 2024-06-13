@@ -6,9 +6,9 @@ pub static GRAPHICS: &Graphics = include_aseprite!(
     ,"gfx/buttons.aseprite"  // Buttons on Gba ui
     ,"gfx/boss_hp.aseprite" // boss health bar size 16x16
     ,"gfx/characters.aseprite" // Character sprites
-    ,"gfx/bosses.aseprite" // Character sprites
+    ,"gfx/bosses.aseprite" // Boss sprites and names
     ,"gfx/banner.aseprite" // Bottom Banner
-    ,"gfx/health.aseprite" // Bottom Banner
+    ,"gfx/health.aseprite" // health bars
     ,"gfx/spell_effects.aseprite" // Spell effects
 );
 

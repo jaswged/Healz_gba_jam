@@ -62,6 +62,7 @@ static BTN_R_SPRITE: &Tag = GRAPHICS.tags().get("R");
 // endregion
 
 static SKULL_SPRITE_TAG: &Tag = GRAPHICS.tags().get("skull");
+static BALLS_SPRITE_TAG: &Tag = GRAPHICS.tags().get("loading_balls");
 static CHEST_SPRITE_TAG: &Tag = GRAPHICS.tags().get("chest");
 static HOURGLASS_SPRITE_TAG: &Tag = GRAPHICS.tags().get("hourglass");
 static LEAF_SPRITE_TAG: &Tag = GRAPHICS.tags().get("leaf");
@@ -89,8 +90,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let (tiled, mut vram) = gba.display.video.tiled0();
 
         // Sounds
-        // let mut mixer = gba.mixer.mixer(Frequency::Hz32768);
-        let mut mixer = gba.mixer.mixer(Frequency::Hz18157);
+        let mut mixer = gba.mixer.mixer(Frequency::Hz32768);
+        // let mut mixer = gba.mixer.mixer(Frequency::Hz18157);
         // let mut mixer = gba.mixer.mixer(Frequency::Hz10512);
         mixer.enable();
 
@@ -189,13 +190,13 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         // Spell effects
         let mut hourglass: Object = object.object_sprite(HOURGLASS_SPRITE_TAG.sprite(0));
-        let mut hourglass_cauterize: Object = object.object_sprite(HOURGLASS_SPRITE_TAG.sprite(0));
-        hourglass.set_position((100, 115));
-        hourglass_cauterize.set_position((100, 145));
+        hourglass.set_position((100, 130));
 
         let mut leaf: Object = object.object_sprite(LEAF_SPRITE_TAG.sprite(0));
         let mut caut: Object = object.object_sprite(CAUTERIZE_SPRITE_TAG.sprite(0));
         let mut flash_obj: Object = object.object_sprite(LIGHT_FLASH_SPRITE_TAG.sprite(0));
+        let mut balls: Object = object.object_sprite(BALLS_SPRITE_TAG.sprite(0));
+        balls.set_position((107, 131));
 
         let mut aoe_timer: usize = 0;
         let mut tank_hit: bool = false;
@@ -231,10 +232,15 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 for (i, c) in &mut chars.iter_mut().enumerate() {
                     if c.just_died {
                         sfx.player_died();
-                        dps -= c.dps;
-                        println!("Char died. THeir dps: {}. New toal: {}", c.dps, dps);
+                        println!("Char died at {}. Dps before subtract {}, amount to subtract {}", i, dps, c.dps);
+                        // todo this gets called twice each death...
+                        if c.dps <= dps {
+                            dps -= c.dps;
+                        } else {
+                            dps = 0;
+                        }
                         c.just_died = false;
-                        println!("Char died at {}. Removing", i);
+                        println!("After yo");
                         // *alive.remove(i);
                     }
                 }
@@ -271,7 +277,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     caut.hide();
                     flash_obj.hide();
                     hourglass.hide();
-                    hourglass_cauterize.hide();
+                    chars[1].stop_meditating();
                     // tear_down_dungeon_background(bg, &mut vram);
 
                     // Todo show the banner sprites again from a struct and try to text write over them
@@ -288,6 +294,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         }
 
                         if frame_counter % 10 == 0 {
+                            println!("Should be updating idle animations");
                             for c in &mut chars {
                                 c.update_idle_animation(frame_counter);
                             }
@@ -335,13 +342,15 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     // 4 times per second
                     // update char animations
                     Character::update_animations(&mut chars, frame_counter);
+                    boss.update(frame_counter);
 
                     if cauterize > 0 {
                         caut.set_sprite(object.sprite(CAUTERIZE_SPRITE_TAG.animation_sprite(frame_counter)));
                         cauterize -= 1;
 
                         if cauterize == 0 {
-                            hourglass_cauterize.hide();
+                            sfx.cauterize_ready();
+                            hourglass.hide();
                             caut.hide();
                             cauterize = -1;
                         }
@@ -350,15 +359,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
                 // Damage boss based on alive dps
                 if dps != 0 && frame_counter % (60 / dps) == 0 {
-                    // todo take damage based on which chars are alive. if only healer, no damage...
                     boss.take_damage(1);
                 }
 
                 if hot == 0 {
-                    println!("Hot is over");
-                    // todo play sound effect that hot is ready again
                     sfx.hot_ready();
-                    hourglass.hide();
                     leaf.hide();
                     hot -= 1;
                 }
@@ -452,11 +457,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             chars[frame.selected_char].take_heals(8);
                             mana_bar.lose_amount(5);
                             // todo begin ability cooldown.
-                            // show hourglass. todo hide when cooldown is over
                             cauterize = 4;
                             caut.set_position(chars_effects_pos[frame.selected_char]);
                             caut.show();
-                            hourglass_cauterize.show();
+                            hourglass.show();
+                            sfx.fire_hit();
                         } else {
                             println!("Out of manna bruv or too soon");
                             sfx.player_oom();
@@ -469,7 +474,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             hot_target = frame.selected_char;
                             hot = 30;
                             // Show hour glass cooldown, spawn sprite effect over chosen char and decrement
-                            hourglass.show();
                             leaf.set_position(chars_effects_pos[hot_target]);
                             leaf.show();
                         }

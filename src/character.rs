@@ -134,7 +134,7 @@ impl<'obj> Character<'obj> {
     }
 
     pub fn stop_meditating(&mut self) {
-        self.action_tag = HEALER_SPRITE_TAG;
+        self.action_tag = HEALER_ACT_SPRITE_TAG;
     }
 
     pub fn update_animation(&mut self, frame: usize) {
@@ -153,6 +153,14 @@ impl<'obj> Character<'obj> {
         for c in chars {
             if !c.is_dead {
                 c.instance.set_sprite(c.object.sprite(c.action_tag.animation_sprite(frame)));
+            }
+        }
+    }
+
+    pub fn update_idle_animations(chars: &mut [Character; 4], frame: usize) {
+        for c in chars {
+            if !c.is_dead {
+                c.instance.set_sprite(c.object.sprite(c.idle_tag.animation_sprite(frame)));
             }
         }
     }

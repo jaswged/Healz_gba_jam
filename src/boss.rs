@@ -8,6 +8,8 @@ use crate::game_manager::GRAPHICS;
 static SHIELD_TAG: &Tag = GRAPHICS.tags().get("boss_shield");
 static CRAB_TAG: &Tag = GRAPHICS.tags().get("boss_crab");
 static WIZARD_TAG: &Tag = GRAPHICS.tags().get("boss_wizard");
+static NAME_TAG: &Tag = GRAPHICS.tags().get("boss_1_name");
+
 
 #[derive(Clone)]
 pub enum BossType{
@@ -21,6 +23,8 @@ pub struct Boss<'obj>{
     boss_type: BossType,
     dps: i16,
     instance: Object<'obj>,
+    pub sprite_tag: &'obj Tag,
+    pub name_tag: &'obj Tag,
     pub is_dead: bool,
     pub health_bar: BossHealthBar<'obj>,
     pub cooldown_bar: Bar<'obj>,
@@ -30,14 +34,24 @@ pub struct Boss<'obj>{
 
 impl<'obj> Boss<'obj> {
     pub fn new(object: &'obj OamManaged<'obj>, boss_type: BossType, start_x: i32, start_y: i32, aoe_timer: usize) -> Self {
-        let tag = match boss_type {
+        let sprite_tag = match boss_type {
             BossType::Shield => { SHIELD_TAG }
             BossType::Crab => { CRAB_TAG }
             BossType::Wizard => { WIZARD_TAG }
         };
-        let mut instance = object.object_sprite(tag.sprite(0));
+        let mut instance = object.object_sprite(sprite_tag.sprite(0));
         instance.set_position((start_x, start_y));
         instance.show();
+
+        let name_tag = NAME_TAG;
+        let mut name_1 = object.object_sprite(sprite_tag.sprite(0));
+        name_1.set_position((start_x, start_y - 16)).show();
+        let mut name_2 = object.object_sprite(sprite_tag.sprite(1));
+        name_2.set_position((start_x + 16, start_y - 16)).show();
+        let mut name_3 = object.object_sprite(sprite_tag.sprite(2));
+        name_3.set_position((start_x + 32, start_y - 16)).show();
+        let mut name_4 = object.object_sprite(sprite_tag.sprite(3));
+        name_4.set_position((start_x + 48, start_y - 16)).show();
 
         let health_bar = BossHealthBar::new(object, 173, 19);
         let cooldown_bar = Bar::new(&object, BarType::Cooldown, 188, 30);
@@ -46,6 +60,8 @@ impl<'obj> Boss<'obj> {
             boss_type,
             dps: 3,
             instance,
+            sprite_tag,
+            name_tag,
             is_dead: false,
             health_bar,
             cooldown_bar,
@@ -74,5 +90,9 @@ impl<'obj> Boss<'obj> {
         self.instance.hide();
         self.health_bar.hide_all();
         self.cooldown_bar.hide_all();
+    }
+
+    pub fn update(&mut self, frame: usize) {
+        self.instance.set_sprite(self.object.sprite(self.sprite_tag.animation_sprite(frame)));
     }
 }

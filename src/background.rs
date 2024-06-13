@@ -10,7 +10,8 @@ include_background_gfx!(backgrounds, "000000",
         title => deduplicate "gfx/title-screen.aseprite",
         dungeon => deduplicate "gfx/dungeon.aseprite",
         dungeon_blank => deduplicate "gfx/dungeon_blank.aseprite",
-        ending => deduplicate "gfx/ending_page.aseprite");
+        ending => deduplicate "gfx/ending_page.aseprite",
+        game_over => deduplicate "gfx/game_over.aseprite");
 
 pub fn show_dungeon_screen<'obj>(vram: &mut VRamManager, tiled: &'obj Tiled0<'obj>, is_blank: bool) -> MapLoan<'obj, RegularMap> {
     let mut bg: MapLoan<RegularMap> = tiled.background(Priority::P2,
@@ -69,7 +70,7 @@ pub fn show_splash_screen(input: &mut ButtonController, vram: &mut VRamManager, 
     background.commit(vram);
 }
 
-pub fn show_game_over_screen(input: &mut ButtonController, vram: &mut VRamManager, tiled: &Tiled0, sfx: &mut Sfx) {
+pub fn show_ending_page_screen(input: &mut ButtonController, vram: &mut VRamManager, tiled: &Tiled0, sfx: &mut Sfx) {
     let mut ending_bg = tiled.background(
         Priority::P1,
         RegularBackgroundSize::Background32x32,
@@ -79,6 +80,32 @@ pub fn show_game_over_screen(input: &mut ButtonController, vram: &mut VRamManage
     ending_bg.set_visible(false);
 
     ending_bg.fill_with(vram, &backgrounds::ending);
+    ending_bg.commit(vram);
+    ending_bg.set_visible(true);
+
+    loop {
+        input.update();
+        sfx.frame();
+        if input.is_just_pressed(Button::A | Button::B | Button::START | Button::SELECT) {
+            break;
+        }
+        agb::display::busy_wait_for_vblank();
+    }
+    ending_bg.set_visible(false);
+    ending_bg.clear(vram);
+    ending_bg.commit(vram);
+}
+
+pub fn show_game_over_screen(input: &mut ButtonController, vram: &mut VRamManager, tiled: &Tiled0, sfx: &mut Sfx) {
+    let mut ending_bg = tiled.background(
+        Priority::P1,
+        RegularBackgroundSize::Background32x32,
+        TileFormat::FourBpp,
+    );
+    vram.set_background_palettes(backgrounds::PALETTES);
+    ending_bg.set_visible(false);
+
+    ending_bg.fill_with(vram, &backgrounds::game_over);
     ending_bg.commit(vram);
     ending_bg.set_visible(true);
 
