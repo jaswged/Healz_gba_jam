@@ -46,7 +46,7 @@ use agb::input::ButtonController;
 use core::fmt::Write;
 use agb::display::{HEIGHT, WIDTH};
 use agb::sound::mixer::Frequency;
-use crate::background::{show_dungeon_screen, show_splash_screen, tear_down_dungeon_screen, show_game_over_screen};
+use crate::background::{show_splash_screen, Terrain};
 use crate::bar::{BarType, Bar};
 use crate::boss::Boss;
 use crate::boss::BossType::{Crab, Shield, Wizard};
@@ -81,28 +81,53 @@ fn main(mut gba: agb::Gba) -> ! {
 }
 
 fn game_main(mut gba: agb::Gba) -> ! {
+    // Create a button controller. only allows for reading
     let mut input = ButtonController::new();
+    let mut won = false;
+
+    // Get the object manager
+    let object: OamManaged = gba.display.object.get_managed();
+    let (tiled, mut vram) = gba.display.video.tiled0();
+
+    // Sounds
+    let mut mixer = gba.mixer.mixer(Frequency::Hz32768);
+    // let mut mixer = gba.mixer.mixer(Frequency::Hz18157);
+    // let mut mixer = gba.mixer.mixer(Frequency::Hz10512);
+    mixer.enable();
+    let mut sfx = Sfx::new(&mut mixer);
+
+    // Show title page. press Enter to continue
+    let mut splash_screen = tiled.background(
+        Priority::P0,
+        RegularBackgroundSize::Background32x32,
+        TileFormat::FourBpp,
+    );
+    sfx.title_screen();
+    show_splash_screen(&mut input, &mut vram, background::SplashScreen::Start, &mut sfx, &mut splash_screen);
+
     loop {
-        // Get the object manager
-        let object: OamManaged = gba.display.object.get_managed();
+       // Define all backgrounds
+        let mut background_terrain: MapLoan<RegularMap> = tiled.background(
+            Priority::P3,
+            RegularBackgroundSize::Background32x32,
+            TileFormat::FourBpp,
+        );
+        let mut background_names: MapLoan<RegularMap> = tiled.background(
+            Priority::P2,
+            RegularBackgroundSize::Background32x32,
+            TileFormat::FourBpp,
+        );
+        let mut background_ui: MapLoan<RegularMap> = tiled.background(
+            Priority::P1,
+            RegularBackgroundSize::Background32x32,
+            TileFormat::FourBpp,
+        );
 
-        // Create a button controller. only allows for reading
-        let (tiled, mut vram) = gba.display.video.tiled0();
+        // setup dungeon backdrop
+        background::show_background_terrain(background_terrain, &mut vram, Terrain::Dungeon);
 
-        // Sounds
-        let mut mixer = gba.mixer.mixer(Frequency::Hz32768);
-        // let mut mixer = gba.mixer.mixer(Frequency::Hz18157);
-        // let mut mixer = gba.mixer.mixer(Frequency::Hz10512);
-        mixer.enable();
-
-        let mut sfx = Sfx::new(&mut mixer);
-
-        // Show title page. press to continue
-        // sfx.title_screen();
-        show_splash_screen(&mut input, &mut vram, &tiled, &mut sfx);
-
-        // Background
-        let mut blank_bg = show_dungeon_screen(&mut vram, &tiled, true);
+        // setup background_names
+        background::show_background_names(background_names, &mut vram);
 
         // Players
         let chars_effects_pos = [(8, 12), (8, 76), (80, 12), (80, 76)];
@@ -112,27 +137,52 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let barb = Character::new(&object, chars_effects_pos[3], Profession::Barb, 1);
 
         let mut chars = [wizard, healer, tank, barb];
+        chars.iter_mut().for_each(Character::hide_health);
 
         let mut dps = chars.iter().map(|c| c.dps).sum::<usize>();
-        // chars.iter_mut().for_each(Character::show);
+
+        let vblank = agb::interrupt::VBlank::get();
+        vblank.wait_for_vblank();
+        object.commit();
 
         /*********************** Dialog ***********************/
-        // todo Show bottom banner and initial "story" text. No spell text yet
-        // dungeon.aseprite without the health bars on it for showing with text
-        println!("Show blank dungeon for dialog");
+        let mut frame_counter: usize = 0;
+        let mut idle = true;
 
+        loop {
+            input.update();
+
+            frame_counter = frame_counter.wrapping_add(1);
+
+            if frame_counter % 10 == 0 {
+                if idle {
+                    Character::update_idle_animations(&mut chars, frame_counter / 4);
+                } else {
+                    Character::update_animations(&mut chars, frame_counter/ 12);
+                }
+            }
+
+            if input.is_just_pressed(Button::SELECT) {
+                break;
+            } else if input.is_just_pressed(Button::A) {
+                idle = !idle;
+            }
+
+            sfx.frame();
+            vblank.wait_for_vblank();
+            object.commit();
+        }
+/*
         let mut renderer = BOXY_FONT.render_text((3u16, 17u16));
 
         // Renders 2 lines at a time.
         let strings = ["Last time this is", "the boss that wiped us.", "Healz, you better be", "on your A game!", "Is everyone ready?", ""];
         let mut i = 0;
 
-        let vblank = agb::interrupt::VBlank::get();
-        let mut frame_counter: usize = 0;
-
         loop {
+            world_display.commit(&mut vram);
+            world_display.set_visible(true);
             input.update();
-            sfx.frame();
 
             // Show idle chars during dialog
             frame_counter = frame_counter.wrapping_add(1);
@@ -145,7 +195,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
             if input.is_just_pressed(Button::A) && i < strings.len() {
                 // renderer.write_char('8', &mut vram, 2,0);
-                let mut writer = renderer.writer(15, 0, &mut blank_bg, &mut vram);
+                let mut writer = renderer.writer(15, 0, &mut world_display, &mut vram);
                 writeln!(&mut writer, "{}", strings[i]).unwrap();
                 writeln!(&mut writer, "{}", strings[i+1]).unwrap();
                 writer.commit();
@@ -157,14 +207,21 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 break;
             }
 
+            sfx.frame();
             vblank.wait_for_vblank();
-            blank_bg.commit(&mut vram);
+            world_display.commit(&mut vram);
             renderer.clear(&mut vram);
         } // End Dialog
 
         println!("tear down dungeon and show one with health bars");
-        tear_down_dungeon_screen(&mut blank_bg, &mut vram);
-        let mut bg = show_dungeon_screen(&mut vram, &tiled, false);
+        */
+        // tear_down_dungeon_screen(&mut blank_bg, &mut vram);
+
+        // let mut world_display = show_dungeon_screen(world_display, &mut vram, false);
+        // let mut bg = show_dungeon_screen_tiled(&mut vram, &tiled, false);
+
+        // Show ui elements and populate health bars
+        background::show_background_ui(&mut background_ui, &mut vram);
         for c in &mut chars {
             c.show_health();
         }
@@ -208,7 +265,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut flash: i16 = -1;
 
         let mut boss_ind = 0;
-        let boss_types = [Shield, Crab, Wizard];
+        // Todo tuple of (BossType, Terrain)?
+        let boss_types = [Crab, Wizard]; // Shield
         sfx.boss();
 
         /************************** Main Game Loop **************************/
@@ -216,16 +274,26 @@ fn game_main(mut gba: agb::Gba) -> ! {
             // Boss
             // 280 is divisible by 35 for cooldown bar slots
             if boss_ind >= boss_types.len() {
+                won = true;
+                mana_bar.hide_all();
+                chars.iter_mut().for_each(Character::hide_health);
+                frame.hide();
+                vblank.wait_for_vblank();
+                object.commit();
                 break;
             }
             let mut boss = Boss::new(&object, boss_types[boss_ind].clone(), 152, 48, 280);
             boss_ind += 1;
 
+            background::show_background_ui(&mut background_ui, &mut vram);
+            frame.show();
+
             // Begin game loop here
             println!("Begin game logic");
             loop {
+                // Must call input.update() every frame or it won't update based on button presses.
+                input.update();
                 frame_counter = frame_counter.wrapping_add(1);
-                sfx.frame();
 
                 // region Game over checks
                 // Game Over All characters dead
@@ -237,7 +305,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         if c.dps <= dps {
                             dps -= c.dps;
                         } else {
-                            dps = 0;
+                            dps = 1;
                         }
                         c.just_died = false;
                         println!("After yo");
@@ -261,31 +329,41 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     leaf.hide();
                     caut.hide();
                     flash_obj.hide();
-                    tear_down_dungeon_screen(&mut bg, &mut vram);
                     agb::display::busy_wait_for_vblank();
                     object.commit();
 
-                    show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
+                    background::hide_background_ui(&mut background_ui, &mut vram);
 
-                    break 'game_loop; // returns you to the title screen
+                    // show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
+                    show_splash_screen(&mut input, &mut vram, background::SplashScreen::Over, &mut sfx, &mut splash_screen);
+
+                    break 'game_loop; // returns you to the dungeon entrance or title screen
                 }
 
                 if boss.is_dead {
                     println!("You win bruv. Good Going. Go get your Lewt!");
-                    // todo boss fight over hide spell effects?
+
+                    // boss fight over; hide spell effects?
                     leaf.hide();
                     caut.hide();
                     flash_obj.hide();
                     hourglass.hide();
                     chars[1].stop_meditating();
-                    // tear_down_dungeon_background(bg, &mut vram);
-
-                    // Todo show the banner sprites again from a struct and try to text write over them
-                    // maybe additional dialog about rezzing or heal up for next fight
+                    mana_bar.hide_all();
+                    frame.hide();
+                    but_a.hide();
+                    but_b.hide();
+                    but_l.hide();
+                    but_r.hide();
+                    boss.hide_cooldown();
+                    chars.iter_mut().for_each(Character::hide_health);
+                    background::hide_background_ui(&mut background_ui, &mut vram);
 
                     loop {
+                        // Todo show the banner sprites again from a struct and try to text write over them
+                        // maybe additional dialog about rezzing or heal up for next fight
+
                         input.update();
-                        sfx.frame();
                         frame_counter = frame_counter.wrapping_add(1);
 
                         if input.is_just_pressed(Button::START | Button::SELECT)
@@ -294,12 +372,10 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         }
 
                         if frame_counter % 10 == 0 {
-                            println!("Should be updating idle animations");
-                            for c in &mut chars {
-                                c.update_idle_animation(frame_counter);
-                            }
+                            Character::update_idle_animations(&mut chars, frame_counter);
                         }
 
+                        sfx.frame();
                         agb::display::busy_wait_for_vblank();
                         object.commit();
                     }
@@ -312,10 +388,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
                     agb::display::busy_wait_for_vblank();
                     object.commit();
-
-                    // tear_down_dungeon_screen(&mut bg, &mut vram);
                     break; // Sends you to the next boss
-                }
+                } // end boss is dead
                 // endregion
 
                 // Animations
@@ -341,7 +415,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 if frame_counter % 15 == 0 {
                     // 4 times per second
                     // update char animations
-                    Character::update_animations(&mut chars, frame_counter);
+                    Character::update_animations(&mut chars, frame_counter / 12);
                     boss.update(frame_counter);
 
                     if cauterize > 0 {
@@ -428,7 +502,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 if !chars[1].is_dead {
                     if input.is_pressed(Button::R) {
                         // Trigger R is pressed. Hold to charge mana
-                        // todo move this % check above to an above section to avoid duplicate checks
                         if frame_counter % 8 == 0 {
                             mana_bar.gain_amount(1);
                         }
@@ -456,7 +529,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             // start timer for how long spell lasts or cooldown
                             chars[frame.selected_char].take_heals(8);
                             mana_bar.lose_amount(5);
-                            // todo begin ability cooldown.
+                            // begin ability cooldown.
                             cauterize = 4;
                             caut.set_position(chars_effects_pos[frame.selected_char]);
                             caut.show();
@@ -469,7 +542,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     } else if input.is_just_pressed(Button::L) {
                         // Cast Regenerate
                         if mana_bar.bar_amt >= 4 && hot <= 0  && !chars[frame.selected_char].is_dead {
-                            println!("Cast Regenerate HOT!");
                             mana_bar.lose_amount(4);
                             hot_target = frame.selected_char;
                             hot = 30;
@@ -489,17 +561,19 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 // }
 
                 // Wait for vblank, then commit the objects to the screen
+                sfx.frame();
                 agb::display::busy_wait_for_vblank();
                 object.commit();
-
-                // We must call input.update() every frame otherwise it won't update based
-                // on the actual button press state.
-                input.update();
             }
         }
 
-        // todo Proper game over screen when all bosses bested.
-        // "See you guys again next week for heroics"
-        show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
+        println!("Before final show splash screen end");
+        if won {
+            // show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
+            // "See you guys again next week for heroics"
+            background::hide_background_ui(&mut background_ui, &mut vram);
+            show_splash_screen(&mut input, &mut vram, background::SplashScreen::End, &mut sfx, &mut splash_screen);
+            won = false;
+        }
     }
 }

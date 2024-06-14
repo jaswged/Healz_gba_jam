@@ -1,6 +1,6 @@
 use crate::game_manager::GRAPHICS;
 use crate::SKULL_SPRITE_TAG;
-use agb::{display::object::{OamManaged, Object, Tag}, println};
+use agb::display::object::{OamManaged, Object, Tag};
 use crate::bar::{BarType, Bar};
 
 static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer_idle");
@@ -124,9 +124,7 @@ impl<'obj> Character<'obj> {
     }
 
     pub fn full_heal(&mut self) {
-        println!("Full heal");
         self.health_bar.fill_bar();
-        println!("NEw health is: {}", self.health_bar.bar_amt);
     }
 
     pub fn start_meditating(&mut self) {

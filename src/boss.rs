@@ -43,6 +43,7 @@ impl<'obj> Boss<'obj> {
         instance.set_position((start_x, start_y));
         instance.show();
 
+        println!("Create boss name tags");
         let name_tag = NAME_TAG;
         let mut name_1 = object.object_sprite(sprite_tag.sprite(0));
         name_1.set_position((start_x, start_y - 16)).show();
@@ -89,6 +90,10 @@ impl<'obj> Boss<'obj> {
     pub fn hide(&mut self) {
         self.instance.hide();
         self.health_bar.hide_all();
+        self.cooldown_bar.hide_all();
+    }
+
+    pub fn hide_cooldown(&mut self){
         self.cooldown_bar.hide_all();
     }
 
