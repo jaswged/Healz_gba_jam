@@ -266,7 +266,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         let mut boss_ind = 0;
         // Todo tuple of (BossType, Terrain)?
-        let boss_types = [Minotaur, Cyclops, Crab, Wizard]; // Shield
+        let boss_types = [Crab, Minotaur, Cyclops, Wizard]; // Shield
         sfx.boss();
 
         /************************** Main Game Loop **************************/

@@ -104,6 +104,6 @@ impl<'obj> Boss<'obj> {
     }
 
     pub fn update(&mut self, frame: usize) {
-        self.instance.set_sprite(self.object.sprite(self.sprite_tag.animation_sprite(frame)));
+        self.instance.set_sprite(self.object.sprite(self.sprite_tag.animation_sprite(frame / 13)));
     }
 }
