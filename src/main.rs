@@ -49,7 +49,7 @@ use agb::sound::mixer::Frequency;
 use crate::background::{show_splash_screen, Terrain};
 use crate::bar::{BarType, Bar};
 use crate::boss::Boss;
-use crate::boss::BossType::{Crab, Cyclops, Shield, Wizard};
+use crate::boss::BossType::{Crab, Cyclops, Minotaur, Shield, Wizard};
 use crate::character::{Character, Profession};
 use crate::sfx::Sfx;
 
@@ -266,7 +266,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         let mut boss_ind = 0;
         // Todo tuple of (BossType, Terrain)?
-        let boss_types = [Cyclops, Crab, Wizard]; // Shield
+        let boss_types = [Minotaur, Cyclops, Crab, Wizard]; // Shield
         sfx.boss();
 
         /************************** Main Game Loop **************************/

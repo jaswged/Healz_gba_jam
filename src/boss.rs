@@ -6,6 +6,7 @@ use crate::CHEST_SPRITE_TAG;
 use crate::game_manager::GRAPHICS;
 
 static CYCLOPS_TAG: &Tag = GRAPHICS.tags().get("boss_cyclops");
+static MINOTAUR_TAG: &Tag = GRAPHICS.tags().get("boss_minotaur");
 static SHIELD_TAG: &Tag = GRAPHICS.tags().get("boss_shield");
 static CRAB_TAG: &Tag = GRAPHICS.tags().get("boss_crab");
 static WIZARD_TAG: &Tag = GRAPHICS.tags().get("boss_wizard");
@@ -15,6 +16,7 @@ static NAME_TAG: &Tag = GRAPHICS.tags().get("boss_1_name");
 #[derive(Clone)]
 pub enum BossType{
     Cyclops,
+    Minotaur,
     Shield,
     Crab,
     Wizard,
@@ -38,6 +40,7 @@ impl<'obj> Boss<'obj> {
     pub fn new(object: &'obj OamManaged<'obj>, boss_type: BossType, start_x: i32, start_y: i32, aoe_timer: usize) -> Self {
         let sprite_tag = match boss_type {
             BossType::Cyclops => {CYCLOPS_TAG }
+            BossType::Minotaur => { MINOTAUR_TAG }
             BossType::Shield => { SHIELD_TAG }
             BossType::Crab => { CRAB_TAG }
             BossType::Wizard => { WIZARD_TAG }
