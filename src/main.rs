@@ -372,7 +372,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         }
 
                         if frame_counter % 10 == 0 {
-                            Character::update_idle_animations(&mut chars, frame_counter);
+                            Character::update_idle_animations(&mut chars, frame_counter / 4);
                         }
 
                         sfx.frame();

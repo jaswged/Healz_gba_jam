@@ -228,7 +228,6 @@ impl<'obj> Bar<'obj> {
             // old is 4th, new is last
             (25..=32, 33..) => {
                 self.mid4.set_sprite(self.object.sprite(arr[0]));
-                println!("Show end sprite");
                 self.end.show();
                 let new_sprite = arr[40 - new_amount];
                 self.end.set_sprite(self.object.sprite(new_sprite));
