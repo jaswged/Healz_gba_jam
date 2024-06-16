@@ -10,7 +10,7 @@ static MINOTAUR_TAG: &Tag = GRAPHICS.tags().get("boss_minotaur");
 static SHIELD_TAG: &Tag = GRAPHICS.tags().get("boss_shield");
 static CRAB_TAG: &Tag = GRAPHICS.tags().get("boss_crab");
 static WIZARD_TAG: &Tag = GRAPHICS.tags().get("boss_wizard");
-static NAME_TAG: &Tag = GRAPHICS.tags().get("boss_1_name");
+static NAME_TAG: &Tag = GRAPHICS.tags().get("boss_2_name");
 
 
 #[derive(Clone)]
@@ -27,6 +27,10 @@ pub struct Boss<'obj>{
     boss_type: BossType,
     dps: i16,
     instance: Object<'obj>,
+    name_obj_1: Object<'obj>,
+    name_obj_2: Object<'obj>,
+    name_obj_3: Object<'obj>,
+    // name_obj_4: Object<'obj>,
     pub sprite_tag: &'obj Tag,
     pub name_tag: &'obj Tag,
     pub is_dead: bool,
@@ -38,6 +42,7 @@ pub struct Boss<'obj>{
 
 impl<'obj> Boss<'obj> {
     pub fn new(object: &'obj OamManaged<'obj>, boss_type: BossType, start_x: i32, start_y: i32, aoe_timer: usize) -> Self {
+        // Start_x: 152, start_y: 48
         let sprite_tag = match boss_type {
             BossType::Cyclops => {CYCLOPS_TAG }
             BossType::Minotaur => { MINOTAUR_TAG }
@@ -49,16 +54,16 @@ impl<'obj> Boss<'obj> {
         instance.set_position((start_x, start_y));
         instance.show();
 
-        println!("Create boss name tags");
         let name_tag = NAME_TAG;
-        let mut name_1 = object.object_sprite(sprite_tag.sprite(0));
-        name_1.set_position((start_x, start_y - 16)).show();
-        let mut name_2 = object.object_sprite(sprite_tag.sprite(1));
-        name_2.set_position((start_x + 16, start_y - 16)).show();
-        let mut name_3 = object.object_sprite(sprite_tag.sprite(2));
-        name_3.set_position((start_x + 32, start_y - 16)).show();
-        let mut name_4 = object.object_sprite(sprite_tag.sprite(3));
-        name_4.set_position((start_x + 48, start_y - 16)).show();
+        let mut name_obj_1 = object.object_sprite(NAME_TAG.sprite(0));
+        name_obj_1.set_position((start_x + 20, start_y - 45)).show();
+        // name_obj_1.set_position((start_x, start_y - 16)).show();
+        let mut name_obj_2 = object.object_sprite(name_tag.sprite(1));
+        name_obj_2.set_position((start_x + 36, start_y - 45)).show();
+        let mut name_obj_3 = object.object_sprite(name_tag.sprite(2));
+        name_obj_3.set_position((start_x + 52, start_y - 45)).show();
+        // let mut name_obj_4 = object.object_sprite(name_tag.sprite(3));
+        // name_obj_4.set_position((start_x + 56, start_y - 45)).show();
 
         let health_bar = BossHealthBar::new(object, 173, 19);
         let cooldown_bar = Bar::new(&object, BarType::Cooldown, 188, 30);
@@ -67,6 +72,9 @@ impl<'obj> Boss<'obj> {
             boss_type,
             dps: 3,
             instance,
+            name_obj_1,
+            name_obj_2,
+            name_obj_3,
             sprite_tag,
             name_tag,
             is_dead: false,
@@ -97,6 +105,9 @@ impl<'obj> Boss<'obj> {
         self.instance.hide();
         self.health_bar.hide_all();
         self.cooldown_bar.hide_all();
+        self.name_obj_1.hide();
+        self.name_obj_2.hide();
+        self.name_obj_3.hide();
     }
 
     pub fn hide_cooldown(&mut self){

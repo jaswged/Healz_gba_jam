@@ -1,7 +1,6 @@
-use agb::display::tiled::{MapLoan, RegularBackgroundSize, RegularMap, TileFormat, Tiled0, TiledMap, VRamManager, TileSetting};
-use agb::display::Priority;
+use agb::display::tiled::{MapLoan, RegularMap, TiledMap, VRamManager};
 use agb::include_background_gfx;
-use agb::input::{Button, ButtonController};
+use agb::input::ButtonController;
 use crate::sfx::Sfx;
 
 // 2ce8f4  vs 000000

@@ -240,13 +240,13 @@ impl<'obj> Bar<'obj> {
         self.bar_amt = new_amount;
     }
 
-    pub fn lose_amount(&mut self, spent: usize){
+    pub fn lose_amount(&mut self, spent: usize) {
         let new_amount = self.bar_amt - spent;
 
         self.update_bar(new_amount);
     }
 
-    pub fn gain_amount(&mut self, gained: usize){
+    pub fn gain_amount(&mut self, gained: usize) {
         let mut new_amount = self.bar_amt + gained;
         if new_amount >= self.bar_max {
             self.bar_amt = self.bar_max;
