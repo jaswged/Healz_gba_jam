@@ -80,7 +80,7 @@ pub struct Bar<'obj> {
     mid2: Object<'obj>,
     mid3: Object<'obj>,
     mid4: Object<'obj>,
-    end: Object<'obj>,
+    mid5: Object<'obj>,
     object: &'obj OamManaged<'obj>,
     pub bar_max: usize,
 }
@@ -96,12 +96,12 @@ impl<'obj> Bar<'obj> {
             BarType::Health => {HP_SPRITE_ARR}
         };
         let mut filled = arr[0];
-        let mut end = object.object_sprite(arr[5]);
+        let mut mid5 = object.object_sprite(arr[5]);
 
         if matches!(bar_type, BarType::Cooldown) {
             bar_amt = 0;
             filled = arr[8];
-            end = object.object_sprite(filled);
+            mid5 = object.object_sprite(filled);
         };
 
         let mid1 = object.object_sprite(filled);
@@ -116,7 +116,7 @@ impl<'obj> Bar<'obj> {
             mid2,
             mid3,
             mid4,
-            end,
+            mid5,
             object,
             bar_max,
         };
@@ -134,7 +134,7 @@ impl<'obj> Bar<'obj> {
         self.mid2.set_position((x + 8, y));
         self.mid3.set_position((x + 16, y));
         self.mid4.set_position((x + 24, y));
-        self.end.set_position((x + 32, y));
+        self.mid5.set_position((x + 32, y));
     }
 
     pub fn update_bar(&mut self, new_amount: usize) {
@@ -148,7 +148,7 @@ impl<'obj> Bar<'obj> {
         // second = 9..=16;
         // third = 17..=24;
         // fourth = 25..=32;
-        // last 33..=35
+        // fifth 33..=35
         match (self.bar_amt, new_amount) {
             // Both are first sprite
             (0..=8, 0..=8) => {
@@ -189,6 +189,22 @@ impl<'obj> Bar<'obj> {
                 let new_sprite = arr[24 - new_amount];
                 self.mid3.set_sprite(self.object.sprite(new_sprite));
             }
+            // Old is 1st, new is 3rd. Skip 2
+            (0..=8, 17..=24) => {
+                self.mid1.set_sprite(self.object.sprite(arr[0]));
+                self.mid2.set_sprite(self.object.sprite(arr[0]));
+                self.mid2.show();
+                let new_sprite = arr[24 - new_amount];
+                self.mid3.set_sprite(self.object.sprite(new_sprite));
+                self.mid3.show();
+            }
+            // Old is 3rd, new is 1st. Skip 2
+            (17..=24, 0..=8) => {
+                self.mid3.hide();
+                self.mid2.hide();
+                let new_sprite = arr[8 - new_amount];
+                self.mid1.set_sprite(self.object.sprite(new_sprite));
+            }
             // Both are 3rd sprite
             (17..=24, 17..=24) => {
                 let new_sprite = arr[24 - new_amount];
@@ -200,40 +216,73 @@ impl<'obj> Bar<'obj> {
                 let new_sprite = arr[24 - new_amount];
                 self.mid3.set_sprite(self.object.sprite(new_sprite));
             }
+            // Old is 2nd, new is 4th. Skip 2
+            (9..=16, 25..=32) => {
+                self.mid2.set_sprite(self.object.sprite(arr[0]));
+                self.mid3.set_sprite(self.object.sprite(arr[0]));
+                self.mid3.show();
+                let new_sprite = arr[32 - new_amount];
+                self.mid4.set_sprite(self.object.sprite(new_sprite));
+                self.mid4.show();
+            }
+            // Old is 4th, new is 2nd. Skip 2
+            (25..=32, 9..=16) => {
+                self.mid4.hide();
+                self.mid3.hide();
+                let new_sprite = arr[16 - new_amount];
+                self.mid2.set_sprite(self.object.sprite(new_sprite));
+            }
             // Old is 3rd, New is 4th
             (17..=24, 25..=32) => {
                 self.mid3.set_sprite(self.object.sprite(arr[0]));
 
-                self.mid4.show();
                 let new_sprite = arr[32 - new_amount];
                 self.mid4.set_sprite(self.object.sprite(new_sprite));
+                self.mid4.show();
             }
             // Both are 4th sprite
             (25..=32, 25..=32) => {
                 let new_sprite = arr[32 - new_amount];
                 self.mid4.set_sprite(self.object.sprite(new_sprite));
             }
-            // Both are last sprite
-            (33.., 33..) => {
-                self.end.show();
+            // Old is third, new is 5th. Skip 2
+            (17..=24, 33..) => {
+                self.mid3.set_sprite(self.object.sprite(arr[0]));
+                self.mid4.set_sprite(self.object.sprite(arr[0]));
+                self.mid4.show();
                 let new_sprite = arr[40 - new_amount];
-                self.end.set_sprite(self.object.sprite(new_sprite));
+                self.mid5.set_sprite(self.object.sprite(new_sprite));
+                self.mid5.show();
             }
-            // Old is last, new is 4th
+            // Old is 5th, new is third. Skip 2
+            (33.., 17..=24) => {
+                self.mid5.hide();
+                self.mid4.hide();
+                let new_sprite = arr[24 - new_amount];
+                self.mid3.set_sprite(self.object.sprite(new_sprite));
+            }
+            // Both are 5th sprite
+            (33.., 33..) => {
+                let new_sprite = arr[40 - new_amount];
+                self.mid5.set_sprite(self.object.sprite(new_sprite));
+                self.mid5.show();
+            }
+            // Old is 5th, new is 4th
             (33.., 25..=32) => {
-                self.end.hide();
+                self.mid5.set_sprite(self.object.sprite(MT_SPRITE));
+                self.mid5.hide();
                 let new_sprite = arr[32 - new_amount];
                 self.mid4.set_sprite(self.object.sprite(new_sprite));
             }
-            // old is 4th, new is last
+            // old is 4th, new is 5th
             (25..=32, 33..) => {
                 self.mid4.set_sprite(self.object.sprite(arr[0]));
-                self.end.show();
                 let new_sprite = arr[40 - new_amount];
-                self.end.set_sprite(self.object.sprite(new_sprite));
+                self.mid5.set_sprite(self.object.sprite(new_sprite));
+                self.mid5.show();
             }
             _ => {
-                println!("TODO: Implement the cases where the start and end blocks arent the same");
+                println!("TODO: Implement missing cases. (O1, N4), (O4, N1), (O2, N5), (O5, N2)");
             }
         };
 
@@ -265,14 +314,14 @@ impl<'obj> Bar<'obj> {
         self.mid2.hide();
         self.mid3.hide();
         self.mid4.hide();
-        self.end.hide();
+        self.mid5.hide();
     }
     pub fn show_all(&mut self) {
         self.mid1.show();
         self.mid2.show();
         self.mid3.show();
         self.mid4.show();
-        self.end.show();
+        self.mid5.show();
     }
 
     pub fn reset_cooldown(&mut self) {
@@ -281,7 +330,7 @@ impl<'obj> Bar<'obj> {
         self.mid2.set_sprite(self.object.sprite(MT_SPRITE));
         self.mid3.set_sprite(self.object.sprite(MT_SPRITE));
         self.mid4.set_sprite(self.object.sprite(MT_SPRITE));
-        self.end.set_sprite(self.object.sprite(MT_SPRITE));
+        self.mid5.set_sprite(self.object.sprite(MT_SPRITE));
     }
 
     pub fn fill_bar(&mut self) {
@@ -296,7 +345,7 @@ impl<'obj> Bar<'obj> {
         self.mid2.set_sprite(self.object.sprite(arr[0]));
         self.mid3.set_sprite(self.object.sprite(arr[0]));
         self.mid4.set_sprite(self.object.sprite(arr[0]));
-        self.end.set_sprite(self.object.sprite(arr[5]));
+        self.mid5.set_sprite(self.object.sprite(arr[5]));
 
         self.show_all();
     }
