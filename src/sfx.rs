@@ -76,11 +76,21 @@ impl<'a> Sfx<'a> {
     }
 
     pub fn game_over(&mut self) {
-        self.mixer.play_sound(SoundChannel::new(GAME_OVER));
+        let channel = self.mixer.channel(&self.bgm).unwrap();
+        channel.stop();
+
+        let mut channel = SoundChannel::new_high_priority(GAME_OVER);
+        channel.stereo().should_loop();
+        self.bgm = self.mixer.play_sound(channel).unwrap();
     }
 
     pub fn victory(&mut self) {
-        self.mixer.play_sound(SoundChannel::new(VICTORY));
+        let channel = self.mixer.channel(&self.bgm).unwrap();
+        channel.stop();
+
+        let mut channel = SoundChannel::new_high_priority(VICTORY);
+        channel.stereo().should_loop();
+        self.bgm = self.mixer.play_sound(channel).unwrap();
     }
 
     // Sound Effect Functions

@@ -1,6 +1,7 @@
 use crate::game_manager::GRAPHICS;
 use crate::SKULL_SPRITE_TAG;
 use agb::display::object::{OamManaged, Object, Tag};
+use agb::println;
 use crate::bar::{BarType, Bar};
 
 static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer_idle");
@@ -68,6 +69,7 @@ impl<'obj> Character<'obj> {
 
     pub fn take_damage(&mut self, damage: usize) {
         if damage >= self.health_bar.bar_amt {
+            println!("Character is dead yo");
             // todo play player dead sound?
             // self.sfx.player_died();
             self.health_bar.bar_amt = 0;

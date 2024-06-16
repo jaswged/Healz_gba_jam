@@ -106,6 +106,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
     show_splash_screen(&mut input, &mut vram, background::SplashScreen::Start, &mut sfx, &mut splash_screen);
 
     loop {
+        sfx.title_screen();
        // Define all backgrounds
         let mut background_terrain: MapLoan<RegularMap> = tiled.background(
             Priority::P3,
@@ -267,10 +268,10 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut boss_ind = 0;
         // Todo tuple of (BossType, Terrain)?
         let boss_types = [Crab, Minotaur, Cyclops, Wizard]; // Shield
-        sfx.boss();
 
         /************************** Main Game Loop **************************/
         'game_loop: loop {
+            sfx.boss();
             // Boss
             // 280 is divisible by 35 for cooldown bar slots
             if boss_ind >= boss_types.len() {
@@ -315,6 +316,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
                 if chars.iter().all(|c| c.is_dead) {
                     println!("You lose!");
+                    sfx.game_over();
 
                     // Hide all active sprites
                     // Todo create a vec with all active sprites and do one loop?
@@ -341,6 +343,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 }
 
                 if boss.is_dead {
+                    sfx.victory();
                     println!("You win bruv. Good Going. Go get your Lewt!");
 
                     // boss fight over; hide spell effects?
@@ -385,6 +388,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         c.revive();
                     }
                     mana_bar.fill_bar();
+                    hot = -1; // Reset hot cooldown
 
                     agb::display::busy_wait_for_vblank();
                     object.commit();
@@ -394,6 +398,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
                 // Animations
                 if frame_counter % 8 == 0 {
+                    boss.update(frame_counter);
+
                     hourglass.set_sprite(object.sprite(HOURGLASS_SPRITE_TAG.animation_sprite(frame_counter)));
                     boss.cooldown_bar.gain_amount(1);
 
@@ -416,7 +422,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     // 4 times per second
                     // update char animations
                     Character::update_animations(&mut chars, frame_counter / 12);
-                    boss.update(frame_counter);
 
                     if cauterize > 0 {
                         caut.set_sprite(object.sprite(CAUTERIZE_SPRITE_TAG.animation_sprite(frame_counter)));
