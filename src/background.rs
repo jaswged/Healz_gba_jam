@@ -7,7 +7,10 @@ use crate::sfx::Sfx;
 include_background_gfx!(backgrounds, "2ce8f4",
         title => deduplicate "gfx/title-screen.aseprite",
         ui => deduplicate "gfx/dungeon.aseprite",
+        cave_blank => deduplicate "gfx/cave_blank.aseprite",
         dungeon_blank => deduplicate "gfx/dungeon_blank.aseprite",
+        field_blank =>  deduplicate "gfx/field_blank.aseprite",
+        sewer_blank => deduplicate "gfx/sewer_blank.aseprite",
         ending => deduplicate "gfx/ending_page.aseprite",
         game_over => deduplicate "gfx/game_over.aseprite",
         // help => deduplicate "gfx/help-text.aseprite",
@@ -19,14 +22,21 @@ pub enum SplashScreen {
     Over,
 }
 
+#[derive(Clone)]
 pub enum Terrain {
+    Cave,
     Dungeon,
+    Field,
+    Sewer,
 }
 
-pub fn show_background_terrain(mut bg: MapLoan<RegularMap>, vram: &mut VRamManager, which: Terrain){
+pub fn show_background_terrain(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager, which: Terrain){
     bg.clear(vram);
     let tile_data = match which {
+        Terrain::Cave => &backgrounds::cave_blank,
         Terrain::Dungeon => &backgrounds::dungeon_blank,
+        Terrain::Field => &backgrounds::field_blank,
+        Terrain::Sewer => &backgrounds::sewer_blank,
     };
 
     bg.set_visible(false);

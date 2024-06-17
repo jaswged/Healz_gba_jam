@@ -47,6 +47,7 @@ use core::fmt::Write;
 use agb::display::{HEIGHT, WIDTH};
 use agb::sound::mixer::Frequency;
 use crate::background::{show_splash_screen, Terrain};
+use crate::background::Terrain::{Cave, Sewer, Dungeon, Field};
 use crate::bar::{BarType, Bar};
 use crate::boss::Boss;
 use crate::boss::BossType::{Crab, Cyclops, Minotaur, Shield, Wizard};
@@ -125,7 +126,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
         );
 
         // setup dungeon backdrop
-        background::show_background_terrain(background_terrain, &mut vram, Terrain::Dungeon);
+        background::show_background_terrain(&mut background_terrain, &mut vram, Field);
 
         // setup background_names
         background::show_background_names(background_names, &mut vram);
@@ -267,7 +268,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         let mut boss_ind = 0;
         // Todo tuple of (BossType, Terrain)?
-        let boss_types = [Crab, Minotaur, Cyclops, Wizard]; // Shield
+        let boss_types = [(Crab, Sewer), (Minotaur, Cave), (Cyclops, Dungeon), (Wizard, Dungeon)]; // Shield
 
         /************************** Main Game Loop **************************/
         'game_loop: loop {
@@ -283,8 +284,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 object.commit();
                 break;
             }
-            let mut boss = Boss::new(&object, boss_types[boss_ind].clone(), 152, 48, 280);
+            let (boss_type, terrain) = boss_types[boss_ind].clone();
+            let mut boss = Boss::new(&object, boss_type, 152, 48, 280);
             boss_ind += 1;
+            // Change background terrain to bosses type
+            background::show_background_terrain(&mut background_terrain, &mut vram, terrain);
 
             background::show_background_ui(&mut background_ui, &mut vram);
             frame.show();
@@ -504,6 +508,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
                 // Maybe have a "Cooldown indicator" like a In center of 4 spells
                 // todo create a player "class" to keep track of all user functions
+                if input.is_just_pressed(Button::START | Button::SELECT,) {
+                    println!("Show pause screen now");
+                    todo!(); // temp for debugging
+                }
+
                 if !chars[1].is_dead {
                     if input.is_pressed(Button::R) {
                         // Trigger R is pressed. Hold to charge mana
