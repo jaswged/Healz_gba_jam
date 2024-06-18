@@ -32,13 +32,14 @@ pub enum Terrain {
 
 pub fn show_background_terrain(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager, which: Terrain){
     bg.clear(vram);
+    bg.commit(vram);
     let tile_data = match which {
         Terrain::Cave => &backgrounds::cave_blank,
         Terrain::Dungeon => &backgrounds::dungeon_blank,
         Terrain::Field => &backgrounds::field_blank,
         Terrain::Sewer => &backgrounds::sewer_blank,
     };
-
+    // vram.replace_tile(tile_data, 0, tile_data, 0);
     bg.set_visible(false);
     bg.fill_with(vram, tile_data);
     bg.commit(vram);
@@ -47,6 +48,7 @@ pub fn show_background_terrain(bg: &mut MapLoan<RegularMap>, vram: &mut VRamMana
 
 pub fn show_background_names(mut bg: MapLoan<RegularMap>, vram: &mut VRamManager){
     bg.clear(vram);
+    bg.commit(vram);
     bg.set_visible(false);
     bg.fill_with(vram, &backgrounds::names);
     bg.commit(vram);
@@ -60,7 +62,7 @@ pub fn show_background_ui(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager){
     bg.set_visible(true);
 }
 
-pub fn hide_background_ui(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager) {
+pub fn hide_background_ui(bg: &mut MapLoan<RegularMap>) {
     bg.set_visible(false);
 }
 
@@ -72,6 +74,7 @@ pub fn show_splash_screen(
     map: &mut RegularMap,
 ) {
     map.clear(vram);
+    map.commit(vram);
     map.set_scroll_pos((0i16, 0i16));
     let tile_data = match which {
         SplashScreen::Start => &backgrounds::title,
@@ -104,4 +107,5 @@ pub fn show_splash_screen(
 
     map.set_visible(false);
     map.clear(vram);
+    map.commit(vram);
 }

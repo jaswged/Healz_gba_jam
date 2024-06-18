@@ -10,24 +10,24 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 - [x] Create a single heal spell to test health system
 - [x] Create a boss to attack characters
 - [x] Have chars dps back with
-  - [ ] Animations for unique attacks
+  - [x] Animations for unique attacks
 - [x] Game over screen
 - [x] Mana bar and boss AOE cooldown
 - [ ] Text writer for player dialog or story
 - [x] Cooldowns for spells and boss abilities
 - [x] UI Text for spells and names
 - [x] Spell effects
-- [ ] Character animations for abilities
-- [ ] Sound effects and music
+- [x] Character animations for abilities
+- [x] Sound effects and music
 - [ ] ...
 - [ ] everything else
 
 ### Sprite ToDos
 
-- [ ] Big bad boss guy
+- [x] Big bad boss guy
 - [ ] Figure out how to do text. is it all char sprites or some tool
-- [ ] Spell effects
-- [ ] Multiple bosses
+- [x] Spell effects
+- [x] Multiple bosses
 - [ ] ...
 
 ### Nice To Haves
@@ -37,10 +37,7 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 - [ ] Keep track of total healing and over-healing so at the end you can share those stats.
 - [ ] Rogue-like dungeons with more packs and bosses
 - [ ] Perhaps a story for the whole dungeon
-- [ ] StS style overworld going node to node
 - [ ] Gear found on boss to make later fights easier (Lewt)
-- [ ] Xp for level ups and character progression
-- [ ] Save game logic
 - [ ] ...
 
 ## Gameplay
@@ -58,7 +55,7 @@ E.G.
 | Tank-Man  | 20      | 2         | Knight from the royal guard |
 | Whizard   | 12      | 4         | Wise and powerful           |
 | Rangeer   | 16      | 3         | Skilled hunter              |
-| MySelf    | 16      | 3         | Cleric devoted to healing   |
+| Healz     | 16      | 3         | Cleric devoted to healing   |
 | Boss Boi  | 100     | 5dps/3dps | Evil lich or something      |
 
 Boss Ideas:
@@ -82,7 +79,7 @@ Boss Ideas:
 ## UI Layout
 
 GBA is 240x160 pixels.
-So with 16px tiles you get 15 x 10 tiles
+So with 16px tiles you get 15 x 10 tiles or 30 x 20 with 8px by 8px
 
 Frame around selected character
 Γ    ˥
@@ -133,6 +130,26 @@ Barb
 Final boss is a big dragon/lich that has 2 phases and 2 attacks. Single target on tank and a cleave for everyone.
 
 > Great work everyone! Especially you Healz.
+
+## Assets
+
+- corners.aseprite" 16x16
+- buttons.aseprite" 16x16
+- boss_hp.aseprite" 16x16
+- characters.aseprite" 32x32
+- bosses.aseprite" 64x64
+- banner.aseprite" 32x32
+- health.aseprite" 8x8
+- spell_effects.aseprite" 16x16 hourglass and mini crab
+
+### Backgrounds
+
+Backgrounds are divided into 4 layers.
+
+0: Splash screens such as title or game overs 
+1: Spell names and health bar outlines
+2: Character names and book banner
+3: Terrain locations
 
 ## Building AGB
 
@@ -188,5 +205,5 @@ First build the binary in release mode using the instructions above, then do the
 ToDo: Works on iOs delta, but fails on PSP
 
 ```sh
-agb-gbafix --debug target/thumbv4t-none-eabi/release/Healz -o healz.gba
+cargo build --release; agb-gbafix --debug target/thumbv4t-none-eabi/release/Healz -o healz.gba
 ```

@@ -267,8 +267,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut flash: i16 = -1;
 
         let mut boss_ind = 0;
-        // Todo tuple of (BossType, Terrain)?
-        let boss_types = [(Crab, Sewer), (Minotaur, Cave), (Cyclops, Dungeon), (Wizard, Dungeon)]; // Shield
+        // tuple of (BossType, Terrain)
+        let boss_types = [(Cyclops, Field), (Minotaur, Cave), (Crab, Sewer), (Wizard, Dungeon)]; // Shield
 
         /************************** Main Game Loop **************************/
         'game_loop: loop {
@@ -294,7 +294,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
             frame.show();
 
             // Begin game loop here
-            println!("Begin game logic");
             loop {
                 // Must call input.update() every frame or it won't update based on button presses.
                 input.update();
@@ -338,9 +337,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     agb::display::busy_wait_for_vblank();
                     object.commit();
 
-                    background::hide_background_ui(&mut background_ui, &mut vram);
+                    background::hide_background_ui(&mut background_ui);
 
-                    // show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
                     show_splash_screen(&mut input, &mut vram, background::SplashScreen::Over, &mut sfx, &mut splash_screen);
 
                     break 'game_loop; // returns you to the dungeon entrance or title screen
@@ -364,7 +362,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     but_r.hide();
                     boss.hide_cooldown();
                     chars.iter_mut().for_each(Character::hide_health);
-                    background::hide_background_ui(&mut background_ui, &mut vram);
+                    background::hide_background_ui(&mut background_ui);
 
                     loop {
                         // Todo show the banner sprites again from a struct and try to text write over them
@@ -510,7 +508,15 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 // todo create a player "class" to keep track of all user functions
                 if input.is_just_pressed(Button::START | Button::SELECT,) {
                     println!("Show pause screen now");
-                    todo!(); // temp for debugging
+                    loop {
+                        // todo temp for debugging
+                        input.update();
+                        if input.is_just_pressed(Button::START | Button::SELECT,) {
+                            break;
+                        }
+
+                        sfx.frame();
+                    }
                 }
 
                 if !chars[1].is_dead {
@@ -585,7 +591,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
         if won {
             // show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
             // "See you guys again next week for heroics"
-            background::hide_background_ui(&mut background_ui, &mut vram);
+            background::hide_background_ui(&mut background_ui);
             show_splash_screen(&mut input, &mut vram, background::SplashScreen::End, &mut sfx, &mut splash_screen);
             won = false;
         }
