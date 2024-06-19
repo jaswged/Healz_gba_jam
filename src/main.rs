@@ -50,7 +50,7 @@ use crate::background::{show_splash_screen, Terrain};
 use crate::background::Terrain::{Cave, Sewer, Dungeon, Field};
 use crate::bar::{BarType, Bar};
 use crate::boss::Boss;
-use crate::boss::BossType::{Crab, Cyclops, Minotaur, Shield, Wizard};
+use crate::boss::BossType::*;
 use crate::character::{Character, Profession};
 use crate::sfx::Sfx;
 
@@ -268,7 +268,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         let mut boss_ind = 0;
         // tuple of (BossType, Terrain)
-        let boss_types = [(Cyclops, Field), (Minotaur, Cave), (Crab, Sewer), (Wizard, Dungeon)]; // Shield
+        let boss_types = [(Cyclops, Field), (Minotaur, Cave), (Crab, Sewer), (Demon, Dungeon), (Wizard, Dungeon)]; // (Bats, Cave),
 
         /************************** Main Game Loop **************************/
         'game_loop: loop {
@@ -285,7 +285,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 break;
             }
             let (boss_type, terrain) = boss_types[boss_ind].clone();
-            let mut boss = Boss::new(&object, boss_type, 152, 48, 280);
+            let mut boss = Boss::new(&object, boss_type, 152, 48, 280, boss_ind);
             boss_ind += 1;
             // Change background terrain to bosses type
             background::show_background_terrain(&mut background_terrain, &mut vram, terrain);
@@ -478,17 +478,23 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         };
                         // gives neg numbers so cast as usize!
                         let chosen = rng::gen() as usize % alive.len();
-                        chars[*alive.get(chosen).unwrap()].take_damage(dmg + 1);
+                        chars[*alive.get(chosen).unwrap()].take_damage(dmg + boss.dps_mod);
                     }
                     tank_hit = !tank_hit;
+                }
+
+                // Once a second
+                if frame_counter % 60 == 0 {
+                    sfx.sword_sound();
                 }
 
                 // Boss aoe barr full is 35 px wide
                 if aoe_timer == boss.aoe_timer {
                     // reset aoe_bar and timer
                     aoe_timer = 0;
+                    let aoe_damage = 6 + boss_ind;
                     for c in &mut chars {
-                        c.take_damage(7);
+                        c.take_damage(aoe_damage);
                     }
                     boss.cooldown_bar.reset_cooldown();
                 } else {
@@ -508,10 +514,12 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 // todo create a player "class" to keep track of all user functions
                 if input.is_just_pressed(Button::START | Button::SELECT,) {
                     println!("Show pause screen now");
+                    sfx.pause();
                     loop {
                         // todo temp for debugging
                         input.update();
                         if input.is_just_pressed(Button::START | Button::SELECT,) {
+                            sfx.unpause();
                             break;
                         }
 
@@ -534,6 +542,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         // Cast Bandage
                         if mana_bar.bar_amt >= 2 && !chars[frame.selected_char].is_dead {
                             // todo add a cast time meter? .5 secs
+                            // sfx.player_heal();
                             chars[frame.selected_char].take_heals(4);
                             mana_bar.lose_amount(2);
                             flash = 3;
@@ -562,6 +571,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     } else if input.is_just_pressed(Button::L) {
                         // Cast Regenerate
                         if mana_bar.bar_amt >= 4 && hot <= 0  && !chars[frame.selected_char].is_dead {
+                            sfx.player_heal();
                             mana_bar.lose_amount(4);
                             hot_target = frame.selected_char;
                             hot = 30;

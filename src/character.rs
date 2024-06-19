@@ -68,14 +68,9 @@ impl<'obj> Character<'obj> {
     }
 
     pub fn take_damage(&mut self, damage: usize) {
-        println!("Take damage {}", damage);
-        println!("Health before {}", self.health_bar.bar_amt);
         if damage >= self.health_bar.bar_amt {
-            println!("Character is dead yo");
-            // todo play player dead sound?
-            // self.sfx.player_died();
             self.health_bar.bar_amt = 0;
-            self.health_bar.hide_mana_mid1();
+            self.health_bar.hide_all();
 
             self.is_dead = true;
             self.just_died = true;

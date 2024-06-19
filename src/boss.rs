@@ -5,27 +5,30 @@ use crate::bar::{BarType, Bar};
 use crate::CHEST_SPRITE_TAG;
 use crate::game_manager::GRAPHICS;
 
-static CYCLOPS_TAG: &Tag = GRAPHICS.tags().get("boss_cyclops");
-static MINOTAUR_TAG: &Tag = GRAPHICS.tags().get("boss_minotaur");
-static SHIELD_TAG: &Tag = GRAPHICS.tags().get("boss_shield");
+static BAT_TAG: &Tag = GRAPHICS.tags().get("boss_bat");
 static CRAB_TAG: &Tag = GRAPHICS.tags().get("boss_crab");
+static CRABBIES_TAG: &Tag = GRAPHICS.tags().get("boss_crabbies");
+static CYCLOPS_TAG: &Tag = GRAPHICS.tags().get("boss_cyclops");
+static DEMON_TAG: &Tag = GRAPHICS.tags().get("boss_demon");
+static MINOTAUR_TAG: &Tag = GRAPHICS.tags().get("boss_minotaur");
 static WIZARD_TAG: &Tag = GRAPHICS.tags().get("boss_wizard");
 static NAME_TAG: &Tag = GRAPHICS.tags().get("boss_2_name");
 
 
 #[derive(Clone)]
 pub enum BossType{
-    Cyclops,
-    Minotaur,
-    Shield,
+    Bats,
     Crab,
+    Cyclops,
+    Demon,
+    Minotaur,
     Wizard,
 }
 
 pub struct Boss<'obj>{
     // aoe_timer should be easily divisible by 35 for the aeo bar
     boss_type: BossType,
-    dps: i16,
+    pub dps_mod: usize,
     instance: Object<'obj>,
     name_obj_1: Object<'obj>,
     name_obj_2: Object<'obj>,
@@ -41,13 +44,14 @@ pub struct Boss<'obj>{
 }
 
 impl<'obj> Boss<'obj> {
-    pub fn new(object: &'obj OamManaged<'obj>, boss_type: BossType, start_x: i32, start_y: i32, aoe_timer: usize) -> Self {
+    pub fn new(object: &'obj OamManaged<'obj>, boss_type: BossType, start_x: i32, start_y: i32, aoe_timer: usize, dps: usize) -> Self {
         // Start_x: 152, start_y: 48
         let sprite_tag = match boss_type {
-            BossType::Cyclops => {CYCLOPS_TAG }
-            BossType::Minotaur => { MINOTAUR_TAG }
-            BossType::Shield => { SHIELD_TAG }
+            BossType::Bats => {BAT_TAG}
             BossType::Crab => { CRAB_TAG }
+            BossType::Cyclops => {CYCLOPS_TAG }
+            BossType::Demon => {DEMON_TAG}
+            BossType::Minotaur => { MINOTAUR_TAG }
             BossType::Wizard => { WIZARD_TAG }
         };
         let mut instance = object.object_sprite(sprite_tag.sprite(0));
@@ -57,7 +61,6 @@ impl<'obj> Boss<'obj> {
         let name_tag = NAME_TAG;
         let mut name_obj_1 = object.object_sprite(NAME_TAG.sprite(0));
         name_obj_1.set_position((start_x + 20, start_y - 45)).show();
-        // name_obj_1.set_position((start_x, start_y - 16)).show();
         let mut name_obj_2 = object.object_sprite(name_tag.sprite(1));
         name_obj_2.set_position((start_x + 36, start_y - 45)).show();
         let mut name_obj_3 = object.object_sprite(name_tag.sprite(2));
@@ -70,7 +73,7 @@ impl<'obj> Boss<'obj> {
 
         Boss {
             boss_type,
-            dps: 3,
+            dps_mod: dps,
             instance,
             name_obj_1,
             name_obj_2,
@@ -86,9 +89,8 @@ impl<'obj> Boss<'obj> {
     }
 
     pub fn take_damage(&mut self, damage: usize) {
-        // todo divide damage in half, so it effectively has 100 hp instead of 50
+        // Could divide damage in half, so it effectively has 100 hp instead of 50
         if damage >= self.health_bar.health_amt {
-            println!("Boss is Dead! You win bruv");
             self.health_bar.health_amt = 0;
             self.health_bar.hide_mid1();
             self.is_dead = true;
