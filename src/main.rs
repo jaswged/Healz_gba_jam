@@ -515,16 +515,25 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 if input.is_just_pressed(Button::START | Button::SELECT,) {
                     println!("Show pause screen now");
                     sfx.pause();
-                    loop {
-                        // todo temp for debugging
-                        input.update();
-                        if input.is_just_pressed(Button::START | Button::SELECT,) {
-                            sfx.unpause();
-                            break;
-                        }
+                    // hide buttons and bottom 2 characters
+                    chars[1].instance.hide();
+                    chars[3].instance.hide();
+                    but_a.hide();
+                    but_b.hide();
+                    but_l.hide();
+                    but_r.hide();
+                    object.commit();
 
-                        sfx.frame();
-                    }
+                    show_splash_screen(&mut input, &mut vram, background::SplashScreen::Pause, &mut sfx, &mut splash_screen);
+
+                    sfx.unpause();
+                    // show buttons and bottom 2 characters
+                    chars[1].instance.show();
+                    chars[3].instance.show();
+                    but_a.show();
+                    but_b.show();
+                    but_l.show();
+                    but_r.show();
                 }
 
                 if !chars[1].is_dead {

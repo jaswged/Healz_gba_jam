@@ -1,6 +1,7 @@
 use agb::display::tiled::{MapLoan, RegularMap, TiledMap, VRamManager};
 use agb::include_background_gfx;
-use agb::input::ButtonController;
+use agb::input::{Button, ButtonController};
+use crate::background;
 use crate::sfx::Sfx;
 
 // 2ce8f4  vs 000000
@@ -13,12 +14,14 @@ include_background_gfx!(backgrounds, "2ce8f4",
         sewer_blank => deduplicate "gfx/sewer_blank.aseprite",
         ending => deduplicate "gfx/ending_page.aseprite",
         game_over => deduplicate "gfx/game_over.aseprite",
+        pause => deduplicate "gfx/pause.aseprite",
         // help => deduplicate "gfx/help-text.aseprite",
         names => deduplicate "gfx/names_and_banner.aseprite",);
 
 pub enum SplashScreen {
     Start,
     End,
+    Pause,
     Over,
 }
 
@@ -80,6 +83,7 @@ pub fn show_splash_screen(
         SplashScreen::Start => &backgrounds::title,
         SplashScreen::End => &backgrounds::ending,
         SplashScreen::Over => &backgrounds::game_over,
+        SplashScreen::Pause => &backgrounds::pause,
     };
 
     let vblank = agb::interrupt::VBlank::get();
@@ -92,11 +96,16 @@ pub fn show_splash_screen(
 
     loop {
         input.update();
+        if matches!(which, SplashScreen::Start) && input.is_just_pressed(Button::SELECT) {
+            // show help Pause screen
+            show_splash_screen(input, vram, SplashScreen::Pause, sfx, map);
+        }
+
         if input.is_just_pressed(
-            agb::input::Button::A
-                | agb::input::Button::B
-                | agb::input::Button::START
-                | agb::input::Button::SELECT,
+            Button::A
+                | Button::B
+                | Button::START
+                | Button::SELECT,
         ) {
             break;
         }
