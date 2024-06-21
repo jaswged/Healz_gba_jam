@@ -25,6 +25,7 @@ mod frame;
 mod game_manager;
 mod sfx;
 mod bar;
+mod dialog;
 
 use crate::game_manager::{GameManager, GRAPHICS};
 use alloc::vec::Vec;
@@ -45,6 +46,7 @@ use agb::fixnum::{Num, num, Vector2D};
 use agb::input::ButtonController;
 use core::fmt::Write;
 use agb::display::{HEIGHT, WIDTH};
+use agb::interrupt::VBlank;
 use agb::sound::mixer::Frequency;
 use crate::background::show_splash_screen;
 use crate::background::Terrain::{Cave, Sewer, Dungeon, Field};
@@ -52,6 +54,7 @@ use crate::bar::{BarType, Bar};
 use crate::boss::Boss;
 use crate::boss::BossType::*;
 use crate::character::{Character, Profession};
+use crate::dialog::Dialog;
 use crate::sfx::Sfx;
 
 // We define some easy ways of referencing the sprites
@@ -68,18 +71,6 @@ static HOURGLASS_SPRITE_TAG: &Tag = GRAPHICS.tags().get("hourglass");
 static LEAF_SPRITE_TAG: &Tag = GRAPHICS.tags().get("leaf");
 static CAUTERIZE_SPRITE_TAG: &Tag = GRAPHICS.tags().get("cauterize");
 static LIGHT_FLASH_SPRITE_TAG: &Tag = GRAPHICS.tags().get("light_flash");
-
-
-static TANK_PORTRAIT_SPRITE_TAG: &Tag = GRAPHICS.tags().get("tankey_portrait");
-static BLANK_PORTRAIT_SPRITE_TAG: &Tag = GRAPHICS.tags().get("blank_portrait");
-static BARB_PORTRAIT_SPRITE_TAG: &Tag = GRAPHICS.tags().get("barb_portrait");
-static WIZ_PORTRAIT_SPRITE_TAG: &Tag = GRAPHICS.tags().get("wizard_portrait");
-static HEALZ_PORTRAIT_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer_portrait");
-static DIALOG_1_SPRITE_TAG: &Tag = GRAPHICS.tags().get("dialog_1");
-static DIALOG_2_SPRITE_TAG: &Tag = GRAPHICS.tags().get("dialog_2");
-static DIALOG_3_SPRITE_TAG: &Tag = GRAPHICS.tags().get("dialog_3");
-static DIALOG_4_SPRITE_TAG: &Tag = GRAPHICS.tags().get("dialog_4");
-static DIALOG_5_SPRITE_TAG: &Tag = GRAPHICS.tags().get("dialog_5");
 // endregion
 
 static FONT: Font = include_font!("fonts/font.ttf", 8);
@@ -156,24 +147,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut dps = chars.iter().map(|c| c.dps).sum::<usize>();
 
         // Dialog Sprites
-        let dialog_portraits = [BLANK_PORTRAIT_SPRITE_TAG, TANK_PORTRAIT_SPRITE_TAG, HEALZ_PORTRAIT_SPRITE_TAG, BARB_PORTRAIT_SPRITE_TAG, WIZ_PORTRAIT_SPRITE_TAG, TANK_PORTRAIT_SPRITE_TAG];
         let mut dialog_ind: usize = 0;
-        let dialog_x = 8;
-        let dialog_y = 128;
-
-        let mut portrait: Object = object.object_sprite(dialog_portraits[dialog_ind].sprite(0));
-        portrait.set_position((dialog_x, dialog_y - 8));
-
-        let mut dialog_1: Object = object.object_sprite(DIALOG_1_SPRITE_TAG.sprite(dialog_ind));
-        dialog_1.set_position((dialog_x + 40, dialog_y));
-        let mut dialog_2: Object = object.object_sprite(DIALOG_2_SPRITE_TAG.sprite(dialog_ind));
-        dialog_2.set_position((dialog_x + 72, dialog_y));
-        let mut dialog_3: Object = object.object_sprite(DIALOG_3_SPRITE_TAG.sprite(dialog_ind));
-        dialog_3.set_position((dialog_x + 104, dialog_y));
-        let mut dialog_4: Object = object.object_sprite(DIALOG_4_SPRITE_TAG.sprite(dialog_ind));
-        dialog_4.set_position((dialog_x + 136, dialog_y));
-        let mut dialog_5: Object = object.object_sprite(DIALOG_5_SPRITE_TAG.sprite(dialog_ind));
-        dialog_5.set_position((dialog_x + 168, dialog_y));
+        let mut dialog = Dialog::new(&object);
 
         let vblank = agb::interrupt::VBlank::get();
         vblank.wait_for_vblank();
@@ -181,62 +156,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         /*********************** Dialog ***********************/
         let mut frame_counter: usize = 0;
-        let mut idle = true;
-
-        portrait.show();
-        dialog_1.show();
-        dialog_2.show();
-        dialog_3.show();
-        dialog_4.show();
-        dialog_5.show();
-        let mut str_cnt = 0;
-
-        loop {
-            input.update();
-            frame_counter = frame_counter.wrapping_add(1);
-
-            if frame_counter % 10 == 0 {
-                if idle {
-                    Character::update_idle_animations(&mut chars, frame_counter / 4);
-                } else {
-                    Character::update_animations(&mut chars, frame_counter/ 12);
-                }
-            }
-
-            if input.is_just_pressed(Button::SELECT) {
-                break;
-            } else if input.is_just_pressed(Button::A) {
-                // Todo create a dialog struct to handle all of this logic?
-                if str_cnt < 2 {
-                    println!("Swap out the dialog sprites {}", str_cnt);
-                    str_cnt += 1;
-                    dialog_ind += 1; // Increment for next showing.
-                    // show dialog sprite at index dialog_ind
-                    portrait.set_sprite(object.sprite(dialog_portraits[dialog_ind].sprite(0)));
-                    dialog_1.set_sprite(object.sprite(DIALOG_1_SPRITE_TAG.sprite(dialog_ind)));
-                    dialog_2.set_sprite(object.sprite(DIALOG_2_SPRITE_TAG.sprite(dialog_ind)));
-                    dialog_3.set_sprite(object.sprite(DIALOG_3_SPRITE_TAG.sprite(dialog_ind)));
-                    dialog_4.set_sprite(object.sprite(DIALOG_4_SPRITE_TAG.sprite(dialog_ind)));
-                    dialog_5.set_sprite(object.sprite(DIALOG_5_SPRITE_TAG.sprite(dialog_ind)));
-                    sfx.text_speed();
-                }
-                else {
-                    break;
-                }
-            } else if input.is_just_pressed(Button::B) {
-                idle = !idle;
-            }
-
-            sfx.frame();
-            vblank.wait_for_vblank();
-            object.commit();
-        }
-        portrait.hide();
-        dialog_1.hide();
-        dialog_2.hide();
-        dialog_3.hide();
-        dialog_4.hide();
-        dialog_5.hide();
+        dialog_ind = show_next_dialog(&mut input, &object, &mut sfx, &mut chars, dialog_ind, &mut dialog, &vblank, frame_counter);
 
         // Show ui elements and populate health bars
         background::show_background_ui(&mut background_ui, &mut vram);
@@ -305,6 +225,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
             boss_ind += 1;
             // Change background terrain to bosses type
             background::show_background_terrain(&mut background_terrain, &mut vram, terrain);
+            // show boss dialog
+            dialog_ind = show_next_dialog(&mut input, &object, &mut sfx, &mut chars, dialog_ind, &mut dialog, &vblank, frame_counter);
 
             background::show_background_ui(&mut background_ui, &mut vram);
             frame.show();
@@ -380,28 +302,9 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     chars.iter_mut().for_each(Character::hide_health);
                     background::hide_background_ui(&mut background_ui);
 
-                    loop {
-                        // Todo show the banner sprites again from a struct and try to text write over them
-                        // maybe additional dialog about rezzing or heal up for next fight
+                    dialog_ind = show_next_dialog(&mut input, &object, &mut sfx, &mut chars, dialog_ind, &mut dialog, &vblank, frame_counter);
 
-                        input.update();
-                        frame_counter = frame_counter.wrapping_add(1);
-
-                        if input.is_just_pressed(Button::START | Button::SELECT)
-                        {
-                            break;
-                        }
-
-                        if frame_counter % 10 == 0 {
-                            Character::update_idle_animations(&mut chars, frame_counter / 4);
-                        }
-
-                        sfx.frame();
-                        agb::display::busy_wait_for_vblank();
-                        object.commit();
-                    }
-
-                    // todo heal up and rez characters and change background for next room
+                    // heal up and rez characters and change background for next room
                     for c in &mut chars {
                         c.revive();
                     }
@@ -432,6 +335,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     // six times per second
                     if hot > 0 {
                         chars[hot_target].take_heals(1);
+                        leaf.set_sprite(object.sprite(LEAF_SPRITE_TAG.animation_sprite(frame_counter / 4)));
                         hot = hot - 1;
                     }
                 }
@@ -442,7 +346,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     Character::update_animations(&mut chars, frame_counter / 12);
 
                     if cauterize > 0 {
-                        caut.set_sprite(object.sprite(CAUTERIZE_SPRITE_TAG.animation_sprite(frame_counter)));
+                        caut.set_sprite(object.sprite(CAUTERIZE_SPRITE_TAG.animation_sprite(frame_counter / 4)));
                         cauterize -= 1;
 
                         if cauterize == 0 {
@@ -504,11 +408,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     sfx.sword_sound();
                 }
 
-                // Boss aoe barr full is 35 px wide
+                // Boss aoe bar full is 35 px wide
                 if aoe_timer == boss.aoe_timer {
                     // reset aoe_bar and timer
                     aoe_timer = 0;
-                    let aoe_damage = 6 + boss_ind;
+                    let aoe_damage = 5 + boss_ind;
                     for c in &mut chars {
                         c.take_damage(aoe_damage);
                     }
@@ -527,9 +431,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 }
 
                 // Maybe have a "Cooldown indicator" like a In center of 4 spells
-                // todo create a player "class" to keep track of all user functions
                 if input.is_just_pressed(Button::START | Button::SELECT,) {
-                    println!("Show pause screen now");
                     sfx.pause();
                     // hide buttons and bottom 2 characters
                     chars[1].instance.hide();
@@ -574,7 +476,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             flash_obj.set_position(chars_effects_pos[frame.selected_char]);
                             flash_obj.show();
                         } else {
-                            println!("Out of manna bruv or too soon");
                             sfx.player_oom();
                         }
                     } else if input.is_just_pressed(Button::B) {
@@ -590,7 +491,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             hourglass.show();
                             sfx.fire_hit();
                         } else {
-                            println!("Out of manna bruv or too soon");
                             sfx.player_oom();
                         }
                     } else if input.is_just_pressed(Button::L) {
@@ -605,7 +505,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             leaf.show();
                         }
                         else {
-                            println!("Out of manna bruv or too soon");
                             sfx.player_oom();
                         }
                     };
@@ -631,4 +530,48 @@ fn game_main(mut gba: agb::Gba) -> ! {
             won = false;
         }
     }
+}
+
+fn show_next_dialog(
+    input: &mut ButtonController,
+    object: &OamManaged,
+    sfx: &mut Sfx,
+    mut chars: &mut [Character; 4],
+    mut dialog_ind: usize,
+    dialog: &mut Dialog,
+    vblank: &VBlank,
+    mut frame_counter: usize) -> usize {
+    // Show the next dialog based on the array
+    println!("show_next_dialog called with ind: {}", dialog_ind);
+    dialog.show();
+    let mut str_cnt = 0;
+    dialog_ind += 1;
+    dialog.show_next_dialog(dialog_ind);
+
+    loop {
+        input.update();
+        frame_counter = frame_counter.wrapping_add(1);
+
+        if frame_counter % 10 == 0 {
+            Character::update_idle_animations(&mut chars, frame_counter / 4);
+        }
+
+        if input.is_just_pressed(Button::A) {
+            if str_cnt < 1 {
+                str_cnt += 1;
+                dialog_ind += 1; // Increment for next showing.
+                // show dialog sprite at index dialog_ind
+                dialog.show_next_dialog(dialog_ind);
+                sfx.text_speed();
+            } else {
+                break;
+            }
+        }
+
+        sfx.frame();
+        vblank.wait_for_vblank();
+        object.commit();
+    }
+    dialog.hide();
+    dialog_ind
 }

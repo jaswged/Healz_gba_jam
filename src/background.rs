@@ -14,7 +14,6 @@ include_background_gfx!(backgrounds, "2ce8f4",
         ending => deduplicate "gfx/ending_page.aseprite",
         game_over => deduplicate "gfx/game_over.aseprite",
         pause => deduplicate "gfx/pause.aseprite",
-        // help => deduplicate "gfx/help-text.aseprite",
         names => deduplicate "gfx/names_and_banner.aseprite",);
 
 pub enum SplashScreen {

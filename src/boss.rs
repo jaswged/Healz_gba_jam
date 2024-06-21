@@ -63,13 +63,13 @@ impl<'obj> Boss<'obj> {
         instance.show();
 
         let mut name_obj_1 = object.object_sprite(name_tag.sprite(0));
-        name_obj_1.set_position((start_x + 20, start_y - 45)).show();
+        name_obj_1.set_position((start_x + 14, start_y - 45)).show();
         let mut name_obj_2 = object.object_sprite(name_tag.sprite(1));
-        name_obj_2.set_position((start_x + 36, start_y - 45)).show();
+        name_obj_2.set_position((start_x + 30, start_y - 45)).show();
         let mut name_obj_3 = object.object_sprite(name_tag.sprite(2));
-        name_obj_3.set_position((start_x + 52, start_y - 45)).show();
+        name_obj_3.set_position((start_x + 46, start_y - 45)).show();
         let mut name_obj_4 = object.object_sprite(name_tag.sprite(3));
-        name_obj_4.set_position((start_x + 68, start_y - 45)).show();
+        name_obj_4.set_position((start_x + 62, start_y - 45)).show();
 
         let health_bar = BossHealthBar::new(object, 173, 19);
         let cooldown_bar = Bar::new(&object, BarType::Cooldown, 188, 30);

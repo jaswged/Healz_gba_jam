@@ -1,6 +1,7 @@
 use crate::game_manager::GRAPHICS;
 use crate::SKULL_SPRITE_TAG;
 use agb::display::object::{OamManaged, Object, Tag};
+use agb::println;
 use crate::bar::{BarType, Bar};
 
 static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer_idle");
@@ -68,19 +69,22 @@ impl<'obj> Character<'obj> {
 
     pub fn take_damage(&mut self, damage: usize) {
         if damage >= self.health_bar.bar_amt {
-            self.health_bar.bar_amt = 0;
-            self.health_bar.hide_all();
+            if !self.is_dead {
+                self.is_dead = true;
+                self.just_died = true;
 
-            self.is_dead = true;
-            self.just_died = true;
+                self.health_bar.bar_amt = 0;
+                self.health_bar.hide_all();
 
-            // Set sprite to Skull
-            self.instance.set_sprite(self.object.sprite(SKULL_SPRITE_TAG.sprite(0)));
-            return
+                // Set sprite to Skull
+                self.instance.set_sprite(self.object.sprite(SKULL_SPRITE_TAG.sprite(0)));
+            }
+        } else {
+            // reduce the health bar sprites
+            let new_health = self.health_bar.bar_amt - damage;
+            println!("Update bar with amounts: ({}, {})", self.health_bar.bar_amt, new_health);
+            self.health_bar.update_bar(new_health);
         }
-        let new_health = self.health_bar.bar_amt - damage;
-
-        self.health_bar.update_bar(new_health);
     }
 
     pub fn take_heals(&mut self, heals: usize) {

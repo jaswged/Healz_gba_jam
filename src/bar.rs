@@ -282,7 +282,7 @@ impl<'obj> Bar<'obj> {
                 self.mid5.show();
             }
             _ => {
-                println!("TODO: Implement missing cases. (O1, N4), (O4, N1), (O2, N5), (O5, N2)");
+                println!("TODO: Implement missing cases. (O1, N4), (O4, N1), (O2, N5), (O5, N2). Got: ({}, {})", self.bar_amt, new_amount);
             }
         };
 
