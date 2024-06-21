@@ -25,7 +25,7 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 ### Sprite ToDos
 
 - [x] Big bad boss guy
-- [ ] Figure out how to do text. is it all char sprites or some tool
+- [x] Figure out how to do text. is it all char sprites or some tool
 - [x] Spell effects
 - [x] Multiple bosses
 - [ ] ...
@@ -33,11 +33,11 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 ### Nice To Haves
 
 - [ ] Intro battle for warming up to the real deal, like a tutorial?
-- [ ] Pause menu for how to play on `Start/Select` buttons
+- [x] Pause menu for how to play on `Start/Select` buttons
 - [ ] Keep track of total healing and over-healing so at the end you can share those stats.
 - [ ] Rogue-like dungeons with more packs and bosses
-- [ ] Perhaps a story for the whole dungeon
-- [ ] Gear found on boss to make later fights easier (Lewt)
+- [x] Perhaps a story for the whole dungeon
+- [ ] ~~Gear found on boss to make later fights easier (Lewt)~~
 - [ ] ...
 
 ## Gameplay
@@ -119,10 +119,9 @@ Barb
 ---
 
 Wizard
-> Oh, joy. Let's head straight into the creepy voices. What could go wrong?
+> Oh, joy. Let's head straight towards the creepy voices. What could go wrong?
 
 Barb
-> Oh, joy. Let's head straight towards the creepy voices. What could go wrong?
 > Wutcdgowrng
 
 --- 

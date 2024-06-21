@@ -87,7 +87,7 @@ pub struct Bar<'obj> {
 
 impl<'obj> Bar<'obj> {
     pub fn new(object: &'obj OamManaged<'obj>, bar_type: BarType, start_x: i32, start_y: i32) -> Self {
-        let bar_max = 35;
+        let bar_max = 36;
         let mut bar_amt = bar_max;
 
         let arr = match bar_type {
@@ -134,7 +134,7 @@ impl<'obj> Bar<'obj> {
         self.mid2.set_position((x + 8, y));
         self.mid3.set_position((x + 16, y));
         self.mid4.set_position((x + 24, y));
-        self.mid5.set_position((x + 32, y));
+        self.mid5.set_position((x + 31, y));
     }
 
     pub fn update_bar(&mut self, new_amount: usize) {

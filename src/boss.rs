@@ -1,6 +1,5 @@
 use crate::boss_health_bar::BossHealthBar;
 use agb::display::object::{OamManaged, Object, Tag};
-use agb::println;
 use crate::bar::{BarType, Bar};
 use crate::CHEST_SPRITE_TAG;
 use crate::game_manager::GRAPHICS;
@@ -12,7 +11,12 @@ static CYCLOPS_TAG: &Tag = GRAPHICS.tags().get("boss_cyclops");
 static DEMON_TAG: &Tag = GRAPHICS.tags().get("boss_demon");
 static MINOTAUR_TAG: &Tag = GRAPHICS.tags().get("boss_minotaur");
 static WIZARD_TAG: &Tag = GRAPHICS.tags().get("boss_wizard");
-static NAME_TAG: &Tag = GRAPHICS.tags().get("boss_2_name");
+static NAME_1_TAG: &Tag = GRAPHICS.tags().get("boss_1_name");
+static NAME_WIZARD: &Tag = GRAPHICS.tags().get("wizard_name");
+static NAME_FERRIS: &Tag = GRAPHICS.tags().get("ferris_name");
+static NAME_MINOTAUR: &Tag = GRAPHICS.tags().get("minotaur_name");
+static NAME_CYCLOPS: &Tag = GRAPHICS.tags().get("cyclops_name");
+static NAME_DEMON: &Tag = GRAPHICS.tags().get("demon_name");
 
 
 #[derive(Clone)]
@@ -33,7 +37,7 @@ pub struct Boss<'obj>{
     name_obj_1: Object<'obj>,
     name_obj_2: Object<'obj>,
     name_obj_3: Object<'obj>,
-    // name_obj_4: Object<'obj>,
+    name_obj_4: Object<'obj>,
     pub sprite_tag: &'obj Tag,
     pub name_tag: &'obj Tag,
     pub is_dead: bool,
@@ -46,27 +50,26 @@ pub struct Boss<'obj>{
 impl<'obj> Boss<'obj> {
     pub fn new(object: &'obj OamManaged<'obj>, boss_type: BossType, start_x: i32, start_y: i32, aoe_timer: usize, dps: usize) -> Self {
         // Start_x: 152, start_y: 48
-        let sprite_tag = match boss_type {
-            BossType::Bats => {BAT_TAG}
-            BossType::Crab => { CRAB_TAG }
-            BossType::Cyclops => {CYCLOPS_TAG }
-            BossType::Demon => {DEMON_TAG}
-            BossType::Minotaur => { MINOTAUR_TAG }
-            BossType::Wizard => { WIZARD_TAG }
+        let (name_tag, sprite_tag) = match boss_type {
+            BossType::Bats => { (NAME_1_TAG, BAT_TAG) }
+            BossType::Crab => { (NAME_FERRIS, CRAB_TAG) }
+            BossType::Cyclops => { (NAME_CYCLOPS, CYCLOPS_TAG) }
+            BossType::Demon => { (NAME_DEMON, DEMON_TAG) }
+            BossType::Minotaur => { (NAME_MINOTAUR, MINOTAUR_TAG) }
+            BossType::Wizard => { (NAME_WIZARD, WIZARD_TAG) }
         };
         let mut instance = object.object_sprite(sprite_tag.sprite(0));
         instance.set_position((start_x, start_y));
         instance.show();
 
-        let name_tag = NAME_TAG;
-        let mut name_obj_1 = object.object_sprite(NAME_TAG.sprite(0));
+        let mut name_obj_1 = object.object_sprite(name_tag.sprite(0));
         name_obj_1.set_position((start_x + 20, start_y - 45)).show();
         let mut name_obj_2 = object.object_sprite(name_tag.sprite(1));
         name_obj_2.set_position((start_x + 36, start_y - 45)).show();
         let mut name_obj_3 = object.object_sprite(name_tag.sprite(2));
         name_obj_3.set_position((start_x + 52, start_y - 45)).show();
-        // let mut name_obj_4 = object.object_sprite(name_tag.sprite(3));
-        // name_obj_4.set_position((start_x + 56, start_y - 45)).show();
+        let mut name_obj_4 = object.object_sprite(name_tag.sprite(3));
+        name_obj_4.set_position((start_x + 68, start_y - 45)).show();
 
         let health_bar = BossHealthBar::new(object, 173, 19);
         let cooldown_bar = Bar::new(&object, BarType::Cooldown, 188, 30);
@@ -78,6 +81,7 @@ impl<'obj> Boss<'obj> {
             name_obj_1,
             name_obj_2,
             name_obj_3,
+            name_obj_4,
             sprite_tag,
             name_tag,
             is_dead: false,
@@ -110,6 +114,7 @@ impl<'obj> Boss<'obj> {
         self.name_obj_1.hide();
         self.name_obj_2.hide();
         self.name_obj_3.hide();
+        self.name_obj_4.hide();
     }
 
     pub fn hide_cooldown(&mut self){

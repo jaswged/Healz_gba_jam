@@ -1,7 +1,6 @@
 use agb::display::tiled::{MapLoan, RegularMap, TiledMap, VRamManager};
 use agb::include_background_gfx;
 use agb::input::{Button, ButtonController};
-use crate::background;
 use crate::sfx::Sfx;
 
 // 2ce8f4  vs 000000
@@ -49,7 +48,7 @@ pub fn show_background_terrain(bg: &mut MapLoan<RegularMap>, vram: &mut VRamMana
     bg.set_visible(true);
 }
 
-pub fn show_background_names(mut bg: MapLoan<RegularMap>, vram: &mut VRamManager){
+pub fn show_background_names(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager){
     bg.clear(vram);
     bg.commit(vram);
     bg.set_visible(false);
