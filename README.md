@@ -13,7 +13,7 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
   - [x] Animations for unique attacks
 - [x] Game over screen
 - [x] Mana bar and boss AOE cooldown
-- [ ] Text writer for player dialog or story
+- [x] Text writer for player dialog or story
 - [x] Cooldowns for spells and boss abilities
 - [x] UI Text for spells and names
 - [x] Spell effects
@@ -85,51 +85,6 @@ Frame around selected character
 Γ    ˥
 L    ˩
 
-## Story
-
-Game begins with dialog,
-
-> Don't stand in Fire!
-> Gee, thanks for the pep talk tankey.
-
-Tank
-> One last pack and we're at the boss. You ready Healz?
-
-> My tag's not Healz, but yeah...
-
-A DBM type ready check sounds and player presses `A` to begin the pull.
-
-This first combat is a tutorial of sorts. (Skip for POC. just boss)
-
-Next up is the boss
-> This is the first boss. Everyone remember about their AOE attack.
-> Xulthor the Devourer
- 
-SHADOW WRAITH
-> Intruders! You shall not leave this place alive!
-
----
-
-Wizard
-> The air is thick with dark magic. Be on your guard, everyone.
-
-Barb
-> Oh great, just what we needed. More dark magic.
-
----
-
-Wizard
-> Oh, joy. Let's head straight towards the creepy voices. What could go wrong?
-
-Barb
-> Wutcdgowrng
-
---- 
-
-Final boss is a big dragon/lich that has 2 phases and 2 attacks. Single target on tank and a cleave for everyone.
-
-> Great work everyone! Especially you Healz.
-
 ## Assets
 
 - corners.aseprite" 16x16
@@ -162,21 +117,12 @@ You will also want to install an emulator. The best support in agb is with [mgba
 `println!` support via `agb::println!` but any emulator should work. You'll get the best experience if
 `mgba-qt` is in your `PATH`.
 
-If you want to run your game on real hardware, you will also need to install `agb-gbafix` which you can do after installing
-rust with the following: `cargo install agb-gbafix`. This is not required if you are only running your game in an emulator.
-
 ### Running in an emulator
 
 Once you have the prerequisites installed, you should be able to build using
 
 ```sh
 cargo build
-```
-
-or in release mode (recommended for the final version to ship to players)
-
-```sh
-cargo build --release
 ```
 
 The resulting file will be in `target/thumbv4t-none-eabi/debug/<your game>` or `target/thumbv4t-none-eabi/release/<your game>` depending on
@@ -188,21 +134,15 @@ If you have `mgba-qt` in your path, you will be able to run your game with
 cargo run
 ```
 
-or in release mode
-
-```sh
-cargo run --release
-```
-
 ## Shipping a .gba file for real hardware
 
-To make a game run on real hardware, you will need to convert the built file into a file suitable for
-running on the real thing.
+If you want to run your game on real hardware, you will also need to install `agb-gbafix` which you can do after installing
+rust with the following: `cargo install agb-gbafix`. This is not required if you are only running your game in an emulator.
 
-First build the binary in release mode using the instructions above, then do the following:
+First build the binary in release mode and then do the following:
 
-ToDo: Works on iOs delta, but fails on PSP
+ToDo: Works on omega and iOs delta, but fails on GPSP.
 
 ```sh
-cargo build --release; agb-gbafix --debug target/thumbv4t-none-eabi/release/Healz -o healz.gba
+cargo build --release; agb-gbafix --debug target/thumbv4t-none-eabi/release/Healz -o Healz.gba
 ```
