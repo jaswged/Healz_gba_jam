@@ -15,7 +15,7 @@ static DIALOG_5_SPRITE_TAG: &Tag = GRAPHICS.tags().get("dialog_5");
 
 
 pub struct Dialog<'obj> {
-    dialog_portraits: [&'obj Tag; 7],
+    dialog_portraits: [&'obj Tag; 16],
     portrait: Object<'obj>,
     dialog_1: Object<'obj>,
     dialog_2: Object<'obj>,
@@ -29,12 +29,27 @@ impl<'obj> Dialog<'obj> {
     pub fn new(object: &'obj OamManaged<'obj>) -> Self {
         let dialog_portraits = [
             BLANK_PORTRAIT_SPRITE_TAG,
-            TANK_PORTRAIT_SPRITE_TAG,
-            TANK_PORTRAIT_SPRITE_TAG,
-            HEALZ_PORTRAIT_SPRITE_TAG,
-            BARB_PORTRAIT_SPRITE_TAG,
-            WIZ_PORTRAIT_SPRITE_TAG,
-            TANK_PORTRAIT_SPRITE_TAG
+            TANK_PORTRAIT_SPRITE_TAG, // This is first boss
+            TANK_PORTRAIT_SPRITE_TAG, // Dont forget the AOE
+            // Cyclops boss
+            HEALZ_PORTRAIT_SPRITE_TAG, // Ha! Piece of cake.
+            BARB_PORTRAIT_SPRITE_TAG, // Good warmup. Whos ready for the sewer?
+            // Minotaur boss
+            WIZ_PORTRAIT_SPRITE_TAG, // This is the boss we wiped on last week
+            HEALZ_PORTRAIT_SPRITE_TAG, // No problem. Big heals incoming
+            // Crab boss
+            BARB_PORTRAIT_SPRITE_TAG, // I think we're getting the hang of this raid.
+            HEALZ_PORTRAIT_SPRITE_TAG, // Told yall i could do it. Lets keep going
+            // Demon boss
+            TANK_PORTRAIT_SPRITE_TAG, // Alright, this is the final boss
+            WIZ_PORTRAIT_SPRITE_TAG, // I've got a date with some shiny new loot!
+            // Wizard boss
+            TANK_PORTRAIT_SPRITE_TAG, // Huzzah. Great work team.
+            BARB_PORTRAIT_SPRITE_TAG, // Come on already. Lets see what dropped.
+            // End of dungeon
+            WIZ_PORTRAIT_SPRITE_TAG, // No way, the bow dropped. We can't even use that.
+            HEALZ_PORTRAIT_SPRITE_TAG, // Guess i'll see you next week for heroics
+            BLANK_PORTRAIT_SPRITE_TAG,
         ];
         let dialog_x = 8;
         let dialog_y = 128;

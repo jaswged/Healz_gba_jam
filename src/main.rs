@@ -71,6 +71,7 @@ static HOURGLASS_SPRITE_TAG: &Tag = GRAPHICS.tags().get("hourglass");
 static LEAF_SPRITE_TAG: &Tag = GRAPHICS.tags().get("leaf");
 static CAUTERIZE_SPRITE_TAG: &Tag = GRAPHICS.tags().get("cauterize");
 static LIGHT_FLASH_SPRITE_TAG: &Tag = GRAPHICS.tags().get("light_flash");
+static LOOT_SPRITE_TAG: &Tag = GRAPHICS.tags().get("final_loot");
 // endregion
 
 static FONT: Font = include_font!("fonts/font.ttf", 8);
@@ -138,7 +139,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let chars_effects_pos = [(8, 12), (8, 76), (80, 12), (80, 76)];
         let wizard = Character::new(&object, chars_effects_pos[0],Profession::Wizard, 1);
         let healer = Character::new(&object, chars_effects_pos[1], Profession::Healer, 0);
-        let tank = Character::new(&object, chars_effects_pos[2], Profession::Tank, 0);
+        let tank = Character::new(&object, chars_effects_pos[2], Profession::Tank, 1);
         let barb = Character::new(&object, chars_effects_pos[3], Profession::Barb, 1);
 
         let mut chars = [wizard, healer, tank, barb];
@@ -223,10 +224,9 @@ fn game_main(mut gba: agb::Gba) -> ! {
             let (boss_type, terrain) = boss_types[boss_ind].clone();
             let mut boss = Boss::new(&object, boss_type, 152, 48, 280, boss_ind);
             boss_ind += 1;
+
             // Change background terrain to bosses type
             background::show_background_terrain(&mut background_terrain, &mut vram, terrain);
-            // show boss dialog
-            dialog_ind = show_next_dialog(&mut input, &object, &mut sfx, &mut chars, dialog_ind, &mut dialog, &vblank, frame_counter);
 
             background::show_background_ui(&mut background_ui, &mut vram);
             frame.show();
@@ -243,14 +243,9 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     if c.just_died {
                         sfx.player_died();
                         println!("Char died at {}. Dps before subtract {}, amount to subtract {}", i, dps, c.dps);
-                        // todo this gets called twice each death...
-                        if c.dps <= dps {
-                            dps -= c.dps;
-                        } else {
-                            dps = 1;
-                        }
+                        dps -= c.dps;
+                        println!("New dps is {}", dps);
                         c.just_died = false;
-                        println!("After yo");
                         // *alive.remove(i);
                     }
                 }
@@ -310,6 +305,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     }
                     mana_bar.fill_bar();
                     hot = -1; // Reset hot cooldown
+                    // reset dps
+                    dps = chars.iter().map(|c| c.dps).sum::<usize>();
 
                     agb::display::busy_wait_for_vblank();
                     object.commit();
@@ -325,7 +322,6 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     boss.cooldown_bar.gain_amount(1);
 
                     if flash > 0 {
-                        // flash_obj.set_sprite(object.sprite(LIGHT_FLASH_SPRITE_TAG.animation_sprite(frame_counter)));
                         flash_obj.set_sprite(object.sprite(LIGHT_FLASH_SPRITE_TAG.animation_sprite(flash as usize)));
                         flash -= 1;
                     }
@@ -523,8 +519,16 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         println!("Before final show splash screen end");
         if won {
-            // show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
+            let mut lewt: Object = object.object_sprite(LOOT_SPRITE_TAG.sprite(0));
+            lewt.set_position((155, 35)).show();
+
             // "See you guys again next week for heroics"
+            dialog_ind = show_next_dialog(&mut input, &object, &mut sfx, &mut chars, dialog_ind, &mut dialog, &vblank, frame_counter);
+            dialog.hide();
+            lewt.hide();
+            object.commit();
+
+            // show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
             background::hide_background_ui(&mut background_ui);
             show_splash_screen(&mut input, &mut vram, background::SplashScreen::End, &mut sfx, &mut splash_screen);
             won = false;
@@ -547,16 +551,20 @@ fn show_next_dialog(
     let mut str_cnt = 0;
     dialog_ind += 1;
     dialog.show_next_dialog(dialog_ind);
+    // Wait 1 sec before first allowing the
+    let mut wait_frames = 60;
 
     loop {
         input.update();
+        // wait several frames before progressing dialog in case user his A spell near boss death
+        wait_frames -= 1;
         frame_counter = frame_counter.wrapping_add(1);
 
         if frame_counter % 10 == 0 {
             Character::update_idle_animations(&mut chars, frame_counter / 4);
         }
 
-        if input.is_just_pressed(Button::A) {
+        if input.is_just_pressed(Button::A) && wait_frames < 0 {
             if str_cnt < 1 {
                 str_cnt += 1;
                 dialog_ind += 1; // Increment for next showing.
