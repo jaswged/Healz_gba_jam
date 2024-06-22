@@ -1,7 +1,14 @@
 # Healz
 
-Quest through a dungeon playing as the healer in a party of 4 in this GBA game.
-Party consists of a sword and board tank, lightning wizard, bow ranger and you!
+Quest through a dungeon playing as the healer in a party of 4 in this Gameboy Advance game.
+
+Your party consists of a sword and board tank, lightning wizard, barbarian and you! Keep them alive by using your healing spells. Don't forget to meditate if your mana is getting low!
+
+![Title Screen](gfx/title-screen.png)
+
+Game play
+
+![Game play image](gfx/cover_image.png)
 
 ## ToDo
 
@@ -25,7 +32,7 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 ### Sprite ToDos
 
 - [x] Big bad boss guy
-- [x] Figure out how to do text. is it all char sprites or some tool
+- [x] Figure out how to do text
 - [x] Spell effects
 - [x] Multiple bosses
 - [ ] ...
@@ -42,11 +49,11 @@ Party consists of a sword and board tank, lightning wizard, bow ranger and you!
 
 ## Gameplay
 
-Each character has a set dps and health.
+Each character has a set dps and health. Cast spells to heal the selected party member or meditate to regain mana.
 
 ## Characters
 
-todo!();
+`todo!();`
 
 E.G.
 
@@ -68,12 +75,12 @@ Boss Ideas:
 
 ### Controls
 
-- A: 1 sec cast basic heal `Bandage`
+- A: 1 sec cast basic heal `Restore`
 - B: Instant cast heal with a cooldown `Cauterize`
 - L: Hot heals over 5 seconds. Only 1 at a time `Regenerate`
 - R: Hold to generate `Meditate`
 - D-pad: Move cursor around to select which character to cast spell on.
-- Start: Start over?
+- Start: Help screen
 - Select: Menu shows details for above spells
 
 ## UI Layout
