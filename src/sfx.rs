@@ -1,5 +1,4 @@
 use agb::include_wav;
-use agb::fixnum::num;
 use agb::rng;
 use agb::sound::mixer::{ChannelId, Mixer, SoundChannel};
 
@@ -8,7 +7,6 @@ static BATTLE_A: &[u8] = include_wav!("music/battleA.wav");
 static BATTLE_B: &[u8] = include_wav!("music/battleB.wav");
 static VICTORY: &[u8] = include_wav!("music/victory.wav");
 static GAME_OVER: &[u8] = include_wav!("music/game_over.wav");
-
 
 // region Sound Effects
 // static CREATURE_SMALL: &[u8] = include_wav!("sfx/creature_small.wav");
@@ -135,13 +133,13 @@ impl<'a> Sfx<'a> {
 
     pub fn sword_sound(&mut self) {
         let is_first = rng::gen() as usize % 5;
-        if  is_first == 0 || is_first == 5 {
+        if is_first == 0 || is_first == 5 {
             self.mixer.play_sound(SoundChannel::new(SWORD_ATK));
         } else if is_first == 1 {
             self.mixer.play_sound(SoundChannel::new(SWORD_HIT_1));
         } else if is_first == 2 {
             self.mixer.play_sound(SoundChannel::new(SFX_DAMAGE_HIT3));
-        }else {
+        } else {
             self.mixer.play_sound(SoundChannel::new(SWORD_HIT_2));
         }
     }

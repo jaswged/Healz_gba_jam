@@ -1,7 +1,7 @@
+use crate::sfx::Sfx;
 use agb::display::tiled::{MapLoan, RegularMap, TiledMap, VRamManager};
 use agb::include_background_gfx;
 use agb::input::{Button, ButtonController};
-use crate::sfx::Sfx;
 
 // 2ce8f4  vs 000000
 include_background_gfx!(backgrounds, "2ce8f4",
@@ -16,6 +16,7 @@ include_background_gfx!(backgrounds, "2ce8f4",
         pause => deduplicate "gfx/pause.aseprite",
         names => deduplicate "gfx/names_and_banner.aseprite",);
 
+#[derive(Clone, Copy)]
 pub enum SplashScreen {
     Start,
     End,
@@ -23,7 +24,7 @@ pub enum SplashScreen {
     Over,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum Terrain {
     Cave,
     Dungeon,
@@ -31,7 +32,7 @@ pub enum Terrain {
     Sewer,
 }
 
-pub fn show_background_terrain(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager, which: Terrain){
+pub fn show_background_terrain(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager, which: &Terrain) {
     bg.clear(vram);
     bg.commit(vram);
     let tile_data = match which {
@@ -47,7 +48,7 @@ pub fn show_background_terrain(bg: &mut MapLoan<RegularMap>, vram: &mut VRamMana
     bg.set_visible(true);
 }
 
-pub fn show_background_names(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager){
+pub fn show_background_names(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager) {
     bg.clear(vram);
     bg.commit(vram);
     bg.set_visible(false);
@@ -56,7 +57,7 @@ pub fn show_background_names(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManage
     bg.set_visible(true);
 }
 
-pub fn show_background_ui(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager){
+pub fn show_background_ui(bg: &mut MapLoan<RegularMap>, vram: &mut VRamManager) {
     bg.set_visible(false);
     bg.fill_with(vram, &backgrounds::ui);
     bg.commit(vram);
@@ -70,7 +71,7 @@ pub fn hide_background_ui(bg: &mut MapLoan<RegularMap>) {
 pub fn show_splash_screen(
     input: &mut ButtonController,
     vram: &mut VRamManager,
-    which: SplashScreen,
+    &which: &SplashScreen,
     sfx: &mut Sfx,
     map: &mut RegularMap,
 ) {
@@ -96,15 +97,10 @@ pub fn show_splash_screen(
         input.update();
         if matches!(which, SplashScreen::Start) && input.is_just_pressed(Button::SELECT) {
             // show help Pause screen
-            show_splash_screen(input, vram, SplashScreen::Pause, sfx, map);
+            show_splash_screen(input, vram, &SplashScreen::Pause, sfx, map);
         }
 
-        if input.is_just_pressed(
-            Button::A
-                | Button::B
-                | Button::START
-                | Button::SELECT,
-        ) {
+        if input.is_just_pressed(Button::A | Button::B | Button::START | Button::SELECT) {
             break;
         }
 

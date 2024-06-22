@@ -17,45 +17,38 @@
 extern crate alloc;
 
 mod background;
-mod banner;
+mod bar;
 mod boss;
 mod boss_health_bar;
 mod character;
+mod dialog;
 mod frame;
 mod game_manager;
 mod sfx;
-mod bar;
-mod dialog;
 
-use crate::game_manager::{GameManager, GRAPHICS};
+use crate::game_manager::GRAPHICS;
 use alloc::vec::Vec;
 use frame::Frame;
 
-use agb::{display::object::{Tag}, println, input::Button, include_background_gfx, rng, include_font};
-use agb::display::object::{ChangeColour, DynamicSprite, OamManaged, Object, PaletteVram, Size, Sprite, TextAlignment};
-use agb::{
-    display::{
-        tiled::{RegularBackgroundSize, TileFormat, TileSet, TileSetting, Tiled0, VRamManager},
-        Priority,
-        Font
-    }
-};
-use agb::display::palette16::Palette16;
-use agb::display::tiled::{MapLoan, RegularMap, TiledMap};
-use agb::fixnum::{Num, num, Vector2D};
-use agb::input::ButtonController;
-use core::fmt::Write;
-use agb::display::{HEIGHT, WIDTH};
-use agb::interrupt::VBlank;
-use agb::sound::mixer::Frequency;
 use crate::background::show_splash_screen;
-use crate::background::Terrain::{Cave, Sewer, Dungeon, Field};
-use crate::bar::{BarType, Bar};
+use crate::background::Terrain::{Cave, Dungeon, Field, Sewer};
+use crate::bar::{Bar, BarType};
 use crate::boss::Boss;
-use crate::boss::BossType::*;
+use crate::boss::BossType::{Crab, Cyclops, Demon, Minotaur, Wizard};
 use crate::character::{Character, Profession};
 use crate::dialog::Dialog;
 use crate::sfx::Sfx;
+
+use agb::display::object::{OamManaged, Object, Tag};
+use agb::display::tiled::{MapLoan, RegularBackgroundSize, RegularMap, TileFormat};
+
+use agb::display::Priority;
+use agb::{println, rng};
+
+use agb::display::{HEIGHT, WIDTH};
+use agb::input::{Button, ButtonController};
+use agb::interrupt::VBlank;
+use agb::sound::mixer::Frequency;
 
 // We define some easy ways of referencing the sprites
 // region Sprite Tags
@@ -73,9 +66,6 @@ static CAUTERIZE_SPRITE_TAG: &Tag = GRAPHICS.tags().get("cauterize");
 static LIGHT_FLASH_SPRITE_TAG: &Tag = GRAPHICS.tags().get("light_flash");
 static LOOT_SPRITE_TAG: &Tag = GRAPHICS.tags().get("final_loot");
 // endregion
-
-static FONT: Font = include_font!("fonts/font.ttf", 8);
-static BOXY_FONT: Font = include_font!("fonts/boxy.ttf", 8);
 
 // The main function must take 1 arguments and never return. The agb::entry decorator
 // ensures that everything is in order. `agb` will call this after setting up the stack
@@ -108,11 +98,17 @@ fn game_main(mut gba: agb::Gba) -> ! {
         TileFormat::FourBpp,
     );
     sfx.title_screen();
-    show_splash_screen(&mut input, &mut vram, background::SplashScreen::Start, &mut sfx, &mut splash_screen);
+    show_splash_screen(
+        &mut input,
+        &mut vram,
+        &background::SplashScreen::Start,
+        &mut sfx,
+        &mut splash_screen,
+    );
 
     loop {
         sfx.title_screen();
-       // Define all backgrounds
+        // Define all backgrounds
         let mut background_terrain: MapLoan<RegularMap> = tiled.background(
             Priority::P3,
             RegularBackgroundSize::Background32x32,
@@ -130,14 +126,14 @@ fn game_main(mut gba: agb::Gba) -> ! {
         );
 
         // setup dungeon backdrop
-        background::show_background_terrain(&mut background_terrain, &mut vram, Field);
+        background::show_background_terrain(&mut background_terrain, &mut vram, &Field);
 
         // setup background_names
         background::show_background_names(&mut background_names, &mut vram);
 
         // Players
         let chars_effects_pos = [(8, 12), (8, 76), (80, 12), (80, 76)];
-        let wizard = Character::new(&object, chars_effects_pos[0],Profession::Wizard, 1);
+        let wizard = Character::new(&object, chars_effects_pos[0], Profession::Wizard, 1);
         let healer = Character::new(&object, chars_effects_pos[1], Profession::Healer, 0);
         let tank = Character::new(&object, chars_effects_pos[2], Profession::Tank, 1);
         let barb = Character::new(&object, chars_effects_pos[3], Profession::Barb, 1);
@@ -157,7 +153,16 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         /*********************** Dialog ***********************/
         let mut frame_counter: usize = 0;
-        dialog_ind = show_next_dialog(&mut input, &object, &mut sfx, &mut chars, dialog_ind, &mut dialog, &vblank, frame_counter);
+        dialog_ind = show_next_dialog(
+            &mut input,
+            &object,
+            &mut sfx,
+            &mut chars,
+            dialog_ind,
+            &mut dialog,
+            &vblank,
+            frame_counter,
+        );
 
         // Show ui elements and populate health bars
         background::show_background_ui(&mut background_ui, &mut vram);
@@ -205,7 +210,14 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         let mut boss_ind = 0;
         // tuple of (BossType, Terrain)
-        let boss_types = [(Cyclops, Field), (Minotaur, Cave), (Crab, Sewer), (Demon, Dungeon), (Wizard, Dungeon)]; // (Bats, Cave),
+        let boss_types = [
+            (Cyclops, Field),
+            // (Bats, Cave),
+            (Minotaur, Cave),
+            (Crab, Sewer),
+            (Demon, Dungeon),
+            (Wizard, Dungeon),
+        ];
 
         /************************** Main Game Loop **************************/
         'game_loop: loop {
@@ -226,7 +238,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
             boss_ind += 1;
 
             // Change background terrain to bosses type
-            background::show_background_terrain(&mut background_terrain, &mut vram, terrain);
+            background::show_background_terrain(&mut background_terrain, &mut vram, &terrain);
 
             background::show_background_ui(&mut background_ui, &mut vram);
             frame.show();
@@ -272,7 +284,13 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
                     background::hide_background_ui(&mut background_ui);
 
-                    show_splash_screen(&mut input, &mut vram, background::SplashScreen::Over, &mut sfx, &mut splash_screen);
+                    show_splash_screen(
+                        &mut input,
+                        &mut vram,
+                        &background::SplashScreen::Over,
+                        &mut sfx,
+                        &mut splash_screen,
+                    );
 
                     break 'game_loop; // returns you to the dungeon entrance or title screen
                 }
@@ -297,7 +315,16 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     chars.iter_mut().for_each(Character::hide_health);
                     background::hide_background_ui(&mut background_ui);
 
-                    dialog_ind = show_next_dialog(&mut input, &object, &mut sfx, &mut chars, dialog_ind, &mut dialog, &vblank, frame_counter);
+                    dialog_ind = show_next_dialog(
+                        &mut input,
+                        &object,
+                        &mut sfx,
+                        &mut chars,
+                        dialog_ind,
+                        &mut dialog,
+                        &vblank,
+                        frame_counter,
+                    );
 
                     but_a.show();
                     but_b.show();
@@ -309,7 +336,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         c.revive();
                     }
                     mana_bar.fill_bar();
-                    hot = -1; // Reset hot cooldown
+                    // Reset hot cooldown
+                    hot = -1;
                     // reset dps
                     dps = chars.iter().map(|c| c.dps).sum::<usize>();
 
@@ -337,7 +365,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     if hot > 0 {
                         chars[hot_target].take_heals(1);
                         leaf.set_sprite(object.sprite(LEAF_SPRITE_TAG.animation_sprite(frame_counter / 4)));
-                        hot = hot - 1;
+                        hot -= 1;
                     }
                 }
 
@@ -385,10 +413,10 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     // Damage the players
                     if tank_hit && !chars[2].is_dead {
                         // Every other attack should be against the tank
-                        chars[2].take_damage(3);
+                        chars[2].take_damage(4);
                     } else {
                         // Damage a random character and vary the damage amount
-                        let dmg = rng::gen() as usize % 2;
+                        let dmg = rng::gen() as usize % 3;
 
                         // only let boss attack alive characters
                         let mut alive = Vec::new();
@@ -396,7 +424,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             if !c.is_dead {
                                 alive.push(i);
                             }
-                        };
+                        }
                         // gives neg numbers so cast as usize!
                         let chosen = rng::gen() as usize % alive.len();
                         chars[*alive.get(chosen).unwrap()].take_damage(dmg + boss.dps_mod);
@@ -431,8 +459,8 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     frame.set_position(left_right, up_down);
                 }
 
-                // Maybe have a "Cooldown indicator" like a In center of 4 spells
-                if input.is_just_pressed(Button::START | Button::SELECT,) {
+                // Maybe have a "Cooldown indicator" in center of 4 spells
+                if input.is_just_pressed(Button::START | Button::SELECT) {
                     sfx.pause();
                     // hide buttons and bottom 2 characters
                     chars[1].instance.hide();
@@ -443,7 +471,13 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     but_r.hide();
                     object.commit();
 
-                    show_splash_screen(&mut input, &mut vram, background::SplashScreen::Pause, &mut sfx, &mut splash_screen);
+                    show_splash_screen(
+                        &mut input,
+                        &mut vram,
+                        &background::SplashScreen::Pause,
+                        &mut sfx,
+                        &mut splash_screen,
+                    );
 
                     sfx.unpause();
                     // show buttons and bottom 2 characters
@@ -496,7 +530,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                         }
                     } else if input.is_just_pressed(Button::L) {
                         // Cast Regenerate
-                        if mana_bar.bar_amt >= 4 && hot <= 0  && !chars[frame.selected_char].is_dead {
+                        if mana_bar.bar_amt >= 4 && hot <= 0 && !chars[frame.selected_char].is_dead {
                             sfx.player_heal();
                             mana_bar.lose_amount(4);
                             hot_target = frame.selected_char;
@@ -504,8 +538,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                             // Show hour glass cooldown, spawn sprite effect over chosen char and decrement
                             leaf.set_position(chars_effects_pos[hot_target]);
                             leaf.show();
-                        }
-                        else {
+                        } else {
                             sfx.player_oom();
                         }
                     };
@@ -524,18 +557,37 @@ fn game_main(mut gba: agb::Gba) -> ! {
 
         println!("Before final show splash screen end");
         if won {
+            but_a.hide();
+            but_b.hide();
+            but_l.hide();
+            but_r.hide();
             let mut lewt: Object = object.object_sprite(LOOT_SPRITE_TAG.sprite(0));
             lewt.set_position((155, 35)).show();
 
             // "See you guys again next week for heroics"
-            dialog_ind = show_next_dialog(&mut input, &object, &mut sfx, &mut chars, dialog_ind, &mut dialog, &vblank, frame_counter);
+            dialog_ind = show_next_dialog(
+                &mut input,
+                &object,
+                &mut sfx,
+                &mut chars,
+                dialog_ind,
+                &mut dialog,
+                &vblank,
+                frame_counter,
+            );
             dialog.hide();
             lewt.hide();
             object.commit();
 
             // show_game_over_screen(&mut input, &mut vram, &tiled, &mut sfx);
             background::hide_background_ui(&mut background_ui);
-            show_splash_screen(&mut input, &mut vram, background::SplashScreen::End, &mut sfx, &mut splash_screen);
+            show_splash_screen(
+                &mut input,
+                &mut vram,
+                &background::SplashScreen::End,
+                &mut sfx,
+                &mut splash_screen,
+            );
             won = false;
         }
     }
@@ -549,9 +601,9 @@ fn show_next_dialog(
     mut dialog_ind: usize,
     dialog: &mut Dialog,
     vblank: &VBlank,
-    mut frame_counter: usize) -> usize {
+    mut frame_counter: usize,
+) -> usize {
     // Show the next dialog based on the array
-    println!("show_next_dialog called with ind: {}", dialog_ind);
     dialog.show();
     let mut str_cnt = 0;
     dialog_ind += 1;
@@ -572,7 +624,8 @@ fn show_next_dialog(
         if input.is_just_pressed(Button::A) && wait_frames < 0 {
             if str_cnt < 1 {
                 str_cnt += 1;
-                dialog_ind += 1; // Increment for next showing.
+                // Increment for next showing.
+                dialog_ind += 1;
                 // show dialog sprite at index dialog_ind
                 dialog.show_next_dialog(dialog_ind);
                 sfx.text_speed();

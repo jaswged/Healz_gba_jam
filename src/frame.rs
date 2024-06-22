@@ -1,4 +1,4 @@
-use agb::display::object::{Object, OamManaged, Tag};
+use agb::display::object::{OamManaged, Object, Tag};
 
 use crate::game_manager::GRAPHICS;
 static TOP_LEFT: &Tag = GRAPHICS.tags().get("top_left");
@@ -84,14 +84,11 @@ impl<'obj> Frame<'obj> {
         self.bot_left.show();
         self.bot_right.show();
     }
+
     pub fn hide(&mut self) {
         self.top_left.hide();
         self.top_right.hide();
         self.bot_left.hide();
         self.bot_right.hide();
-    }
-
-    fn update(&mut self) {
-        // todo move frame in/out every couple frames for a breathe animation
     }
 }

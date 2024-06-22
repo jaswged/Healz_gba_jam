@@ -1,4 +1,4 @@
-use agb::display::object::{Object, OamManaged, Sprite};
+use agb::display::object::{OamManaged, Object, Sprite};
 use agb::println;
 
 use crate::game_manager::GRAPHICS;
@@ -67,7 +67,7 @@ static CD_SPRITE_ARR: [&Sprite; 9] = [
 ];
 // endregion
 
-pub enum BarType{
+pub enum BarType {
     Health,
     Mana,
     Cooldown,
@@ -91,9 +91,9 @@ impl<'obj> Bar<'obj> {
         let mut bar_amt = bar_max;
 
         let arr = match bar_type {
-            BarType::Mana => {MN_SPRITE_ARR}
-            BarType::Cooldown => {CD_SPRITE_ARR}
-            BarType::Health => {HP_SPRITE_ARR}
+            BarType::Mana => MN_SPRITE_ARR,
+            BarType::Cooldown => CD_SPRITE_ARR,
+            BarType::Health => HP_SPRITE_ARR,
         };
         let mut filled = arr[0];
         let mut mid5 = object.object_sprite(arr[5]);
@@ -139,9 +139,9 @@ impl<'obj> Bar<'obj> {
 
     pub fn update_bar(&mut self, new_amount: usize) {
         let arr = match self.bar_type {
-            BarType::Mana => {MN_SPRITE_ARR}
-            BarType::Cooldown => {CD_SPRITE_ARR}
-            BarType::Health => {HP_SPRITE_ARR}
+            BarType::Mana => MN_SPRITE_ARR,
+            BarType::Cooldown => CD_SPRITE_ARR,
+            BarType::Health => HP_SPRITE_ARR,
         };
         // Match on ranges
         // first = 0..=8;
@@ -336,9 +336,9 @@ impl<'obj> Bar<'obj> {
     pub fn fill_bar(&mut self) {
         self.bar_amt = self.bar_max;
         let arr = match self.bar_type {
-            BarType::Mana => {MN_SPRITE_ARR}
-            BarType::Cooldown => {CD_SPRITE_ARR}
-            BarType::Health => {HP_SPRITE_ARR}
+            BarType::Mana => MN_SPRITE_ARR,
+            BarType::Cooldown => CD_SPRITE_ARR,
+            BarType::Health => HP_SPRITE_ARR,
         };
 
         self.mid1.set_sprite(self.object.sprite(arr[0]));

@@ -1,8 +1,8 @@
+use crate::bar::{Bar, BarType};
 use crate::game_manager::GRAPHICS;
 use crate::SKULL_SPRITE_TAG;
 use agb::display::object::{OamManaged, Object, Tag};
 use agb::println;
-use crate::bar::{BarType, Bar};
 
 static HEALER_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer_idle");
 static HEALER_ACT_SPRITE_TAG: &Tag = GRAPHICS.tags().get("healer_act");
@@ -35,13 +35,13 @@ pub struct Character<'obj> {
 
 impl<'obj> Character<'obj> {
     pub fn new(object: &'obj OamManaged<'obj>, start_pos: (i32, i32), profession: Profession, dps: usize) -> Self {
-        let idle_tag = match profession{
+        let idle_tag = match profession {
             Profession::Healer => HEALER_SPRITE_TAG,
             Profession::Wizard => WIZARD_SPRITE_TAG,
             Profession::Tank => TANKEY_SPRITE_TAG,
             Profession::Barb => BARB_SPRITE_TAG,
         };
-        let action_tag = match profession{
+        let action_tag = match profession {
             Profession::Healer => HEALER_ACT_SPRITE_TAG,
             Profession::Wizard => WIZARD_ACT_SPRITE_TAG,
             Profession::Tank => TANKEY_ACT_SPRITE_TAG,
@@ -52,7 +52,7 @@ impl<'obj> Character<'obj> {
         instance.set_position((start_pos.0 + 16, start_pos.1 + 16));
         instance.show();
 
-        let health_bar = Bar::new(object, BarType::Health, start_pos.0 + 20, start_pos.1+4);
+        let health_bar = Bar::new(object, BarType::Health, start_pos.0 + 20, start_pos.1 + 4);
 
         Character {
             dps,
@@ -63,7 +63,7 @@ impl<'obj> Character<'obj> {
             health_bar,
             object,
             idle_tag,
-            action_tag
+            action_tag,
         }
     }
 
@@ -120,7 +120,7 @@ impl<'obj> Character<'obj> {
         self.health_bar.show_all();
     }
 
-    pub fn revive(&mut self){
+    pub fn revive(&mut self) {
         self.is_dead = false;
         self.full_heal();
     }
