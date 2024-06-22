@@ -151,7 +151,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
         let mut dialog_ind: usize = 0;
         let mut dialog = Dialog::new(&object);
 
-        let vblank = agb::interrupt::VBlank::get();
+        let vblank = VBlank::get();
         vblank.wait_for_vblank();
         object.commit();
 
@@ -298,6 +298,11 @@ fn game_main(mut gba: agb::Gba) -> ! {
                     background::hide_background_ui(&mut background_ui);
 
                     dialog_ind = show_next_dialog(&mut input, &object, &mut sfx, &mut chars, dialog_ind, &mut dialog, &vblank, frame_counter);
+
+                    but_a.show();
+                    but_b.show();
+                    but_l.show();
+                    but_r.show();
 
                     // heal up and rez characters and change background for next room
                     for c in &mut chars {

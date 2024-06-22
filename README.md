@@ -144,5 +144,5 @@ First build the binary in release mode and then do the following:
 ToDo: Works on omega and iOs delta, but fails on GPSP.
 
 ```sh
-cargo build --release; agb-gbafix --debug target/thumbv4t-none-eabi/release/Healz -o Healz.gba
+cargo build --release; agb-gbafix --debug target/thumbv4t-none-eabi/release/Healz -o Healz_jam.gba
 ```
