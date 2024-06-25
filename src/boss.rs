@@ -30,7 +30,6 @@ pub enum BossType {
 
 pub struct Boss<'obj> {
     // aoe_timer should be easily divisible by 35 for the aeo bar
-    boss_type: BossType,
     pub dps_mod: usize,
     instance: Object<'obj>,
     name_obj_1: Object<'obj>,
@@ -38,7 +37,6 @@ pub struct Boss<'obj> {
     name_obj_3: Object<'obj>,
     name_obj_4: Object<'obj>,
     pub sprite_tag: &'obj Tag,
-    pub name_tag: &'obj Tag,
     pub is_dead: bool,
     pub health_bar: BossHealthBar<'obj>,
     pub cooldown_bar: Bar<'obj>,
@@ -74,7 +72,6 @@ impl<'obj> Boss<'obj> {
         let cooldown_bar = Bar::new(object, BarType::Cooldown, 188, 30);
 
         Boss {
-            boss_type,
             dps_mod: dps,
             instance,
             name_obj_1,
@@ -82,7 +79,6 @@ impl<'obj> Boss<'obj> {
             name_obj_3,
             name_obj_4,
             sprite_tag,
-            name_tag,
             is_dead: false,
             health_bar,
             cooldown_bar,

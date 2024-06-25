@@ -1,6 +1,6 @@
 # Healz
 
-Quest through a dungeon playing as the healer in a party of 4 in this Gameboy Advance game.
+Quest through a dungeon playing as the healer in a party of 4 in this Gameboy Advance game made for the [GBA Jam 2024](https://itch.io/jam/gbajam24).
 
 Your party consists of a sword and board tank, lightning wizard, barbarian and you! Keep them alive by using your healing spells. Don't forget to meditate if your mana is getting low!
 
@@ -112,7 +112,7 @@ Backgrounds are divided into 4 layers.
 2: Character names and book banner
 3: Terrain locations
 
-## Building AGB
+## Building
 
 ### Prerequisites
 
@@ -140,6 +140,27 @@ If you have `mgba-qt` in your path, you will be able to run your game with
 ```sh
 cargo run
 ```
+
+### Palette Error
+
+If you get an error about `Cannot optimize 16 colur and 256 colour palettes together` simply keep trying. It works sporadically and can be quite frustrating to work around.
+
+```bash
+ Compiling Healz v0.1.0 (~\Healz)
+error: proc macro panicked
+  --> src\background.rs:7:1
+   |
+7  | / include_background_gfx!(backgrounds, "2ce8f4",
+8  | |         title => deduplicate "gfx/title-screen.aseprite",
+9  | |         ui => deduplicate "gfx/dungeon.aseprite",
+10 | |         cave_blank => deduplicate "gfx/cave_blank.aseprite",
+...  |
+16 | |         pause => deduplicate "gfx/pause.aseprite",
+17 | |         names => deduplicate "gfx/names_and_banner.aseprite",);
+   | |______________________________________________________________^
+   |
+   = help: message: Cannot optimise 16 colour and 256 colour palettes together, produces too many colours
+ ```
 
 ## Shipping a .gba file for real hardware
 

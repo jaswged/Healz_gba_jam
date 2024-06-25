@@ -23,7 +23,6 @@ pub enum Profession {
 
 pub struct Character<'obj> {
     pub dps: usize,
-    profession: Profession,
     pub instance: Object<'obj>,
     pub is_dead: bool,
     pub just_died: bool,
@@ -56,7 +55,6 @@ impl<'obj> Character<'obj> {
 
         Character {
             dps,
-            profession,
             instance,
             is_dead: false,
             just_died: false,
@@ -135,18 +133,6 @@ impl<'obj> Character<'obj> {
 
     pub fn stop_meditating(&mut self) {
         self.action_tag = HEALER_ACT_SPRITE_TAG;
-    }
-
-    pub fn update_animation(&mut self, frame: usize) {
-        if !self.is_dead {
-            self.instance.set_sprite(self.object.sprite(self.action_tag.animation_sprite(frame)));
-        }
-    }
-
-    pub fn update_idle_animation(&mut self, frame: usize) {
-        if !self.is_dead {
-            self.instance.set_sprite(self.object.sprite(self.idle_tag.animation_sprite(frame)));
-        }
     }
 
     pub fn update_animations(chars: &mut [Character; 4], frame: usize) {

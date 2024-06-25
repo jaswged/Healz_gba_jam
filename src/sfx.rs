@@ -59,11 +59,6 @@ impl<'a> Sfx<'a> {
         self.mixer.frame();
     }
 
-    pub fn stop_music(&mut self) {
-        let channel = self.mixer.channel(&self.bgm).unwrap();
-        channel.stop();
-    }
-
     pub fn boss(&mut self) {
         let channel = self.mixer.channel(&self.bgm).unwrap();
         channel.stop();

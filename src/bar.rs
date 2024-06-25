@@ -305,10 +305,6 @@ impl<'obj> Bar<'obj> {
         self.update_bar(new_amount);
     }
 
-    pub fn hide_mana_mid1(&mut self) {
-        self.mid1.hide();
-    }
-
     pub fn hide_all(&mut self) {
         self.mid1.hide();
         self.mid2.hide();

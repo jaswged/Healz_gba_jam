@@ -453,7 +453,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
                 // ************* Input ************* //
                 // DPAD update frame. i.e. Selected character
                 // x_tri and y_tri describe with -1, 0 and 1 which way the d-pad is being pressed
-                let mut left_right = input.just_pressed_x_tri() as i32;
+                let left_right = input.just_pressed_x_tri() as i32;
                 let up_down = input.just_pressed_y_tri() as i32;
                 if left_right != 0 || up_down != 0 {
                     frame.set_position(left_right, up_down);
@@ -565,7 +565,7 @@ fn game_main(mut gba: agb::Gba) -> ! {
             lewt.set_position((155, 35)).show();
 
             // "See you guys again next week for heroics"
-            dialog_ind = show_next_dialog(
+            _ = show_next_dialog(
                 &mut input,
                 &object,
                 &mut sfx,
