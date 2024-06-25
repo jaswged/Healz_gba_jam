@@ -107,7 +107,7 @@ L    ˩
 
 Backgrounds are divided into 4 layers.
 
-0: Splash screens such as title or game overs 
+0: Splash screens such as title or game overs
 1: Spell names and health bar outlines
 2: Character names and book banner
 3: Terrain locations
@@ -118,7 +118,7 @@ Backgrounds are divided into 4 layers.
 
 You will need the following installed in order to build and run this project:
 
-* A recent version of `rustup`. See the [rust website](https://www.rust-lang.org/tools/install) for instructions for your operating system
+**A recent version of `rustup`.** See the [rust website](https://www.rust-lang.org/tools/install) for instructions for your operating system
 
 You will also want to install an emulator. The best support in agb is with [mgba](https://mgba.io), with
 `println!` support via `agb::println!` but any emulator should work. You'll get the best experience if
