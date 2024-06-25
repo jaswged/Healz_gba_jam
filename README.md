@@ -75,13 +75,13 @@ Boss Ideas:
 
 ### Controls
 
-- A: 1 sec cast basic heal `Restore`
+- A: 1 sec cast basic heal `Recover`
 - B: Instant cast heal with a cooldown `Cauterize`
-- L: Hot heals over 5 seconds. Only 1 at a time `Regenerate`
-- R: Hold to generate `Meditate`
-- D-pad: Move cursor around to select which character to cast spell on.
-- Start: Help screen
-- Select: Menu shows details for above spells
+- L: Hot (Heal over time) spell heals over 5 seconds. Only 1 at a time `Regenerate`
+- R: Hold to generate mana `Meditate`
+- D-pad: Move frame cursor around to select which character to cast spell on.
+- Start: Help pause screen
+- Select: Help pause screen
 
 ## UI Layout
 
